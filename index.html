@@ -273,27 +273,20 @@ cursor:pointer;
 <body>
 
 <div class="container">
-
-<h2 style="text-align:center;">Onpoint Services Passport Photo Editor</h2>
+<h2>Onpoint Services Passport Photo Editor</h2>
 
 <div class="step">
-<b>1. Upload Photos</b>
-<br><br>
 
-<div class="drop-zone" id="dropZone">
-
-<p>Drag & Drop Photo Here</p>
-<span>or Click to Upload</span>
+<b>1. Upload Photos</b><br><br>
 
 <input type="file" id="upload" multiple accept="image/*">
 
-</div>
-
 <div id="preview"></div>
-</div>
 
+</div>
 
 <div class="step">
+
 <b>2. Select Size</b><br><br>
 
 <select id="ratio">
@@ -303,13 +296,14 @@ cursor:pointer;
 
 </div>
 
-
 <div class="step">
+
 <b>3. Crop Photo</b><br><br>
 
 <button onclick="openCrop()">Open Crop</button>
 
 <div id="cropSection">
+
 <img id="cropImage">
 <div id="guideLine"></div>
 
@@ -322,15 +316,17 @@ cursor:pointer;
 
 <button onclick="applyCrop()">Apply</button>
 <button onclick="closeCrop()">Cancel</button>
-</div>
 
 </div>
 
+</div>
 
 <div class="step">
-<b>4. Adjustments</b>
-<br>
+
+<b>4. Adjustments</b><br>
+
 <div class="tools">
+
 <button onclick="brightness(20)">Brightness +</button>
 <button onclick="brightness(-20)">Brightness -</button>
 
@@ -341,11 +337,13 @@ cursor:pointer;
 <button onclick="setBG('blue')">Blue BG</button>
 
 <button onclick="resetImage()">Reset</button>
-</div>
+
 </div>
 
+</div>
 
 <div class="step">
+
 <b>5. Quantity</b><br><br>
 
 <select id="qty"></select>
@@ -360,12 +358,6 @@ Generate PDF
 
 </div>
 
-<div class="footer">
-Onpoint Services • Developed by Saurabh Ajinath Kharat • © 2026
-</div>
-
-</body>
-
 <script>
 
 const {jsPDF}=window.jspdf;
@@ -374,7 +366,10 @@ let images=[];
 let currentIndex=0;
 let cropper;
 
-let canvas=document.createElement("canvas");let originalImg=new Image();
+let canvas=document.createElement("canvas");
+let ctx=canvas.getContext("2d");
+
+let originalImg=new Image();
 
 const sizes={
 "30x37":{w:30,h:37},
@@ -684,26 +679,6 @@ colCount=0;
 doc.save("passport_photos.pdf");
 
 }
-const dropArea = document.getElementById("dropArea");
-const fileInput = document.getElementById("upload");
-
-dropArea.onclick = () => fileInput.click();
-
-dropArea.addEventListener("dragover", (e)=>{
-e.preventDefault();
-dropArea.style.background="#e8f2ff";
-});
-
-dropArea.addEventListener("dragleave", ()=>{
-dropArea.style.background="#f8fbff";
-});
-
-dropArea.addEventListener("drop", (e)=>{
-e.preventDefault();
-fileInput.files = e.dataTransfer.files;
-fileInput.dispatchEvent(new Event("change"));
-dropArea.style.background="#f8fbff";
-});
 
 </script>
 <div class="footer">
