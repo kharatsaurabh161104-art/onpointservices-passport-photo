@@ -4,685 +4,517 @@
 <meta charset="UTF-8">
 <title>Onpoint Services Passport Photo Editor</title>
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
-body{
-font-family: "Segoe UI", Arial, sans-serif;
-background: linear-gradient(135deg,#004aad,#00c6ff);
-margin:0;
-padding:30px;
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #004aad, #00c6ff);
+  margin: 0;
+  padding: 30px 30px 60px;
 }
 
-/* container */
-
-.container{
-background:white;
-max-width:1100px;
-margin:auto;
-padding:30px;
-border-radius:14px;
-box-shadow:0 15px 40px rgba(0,0,0,0.25);
+.container {
+  background: white;
+  max-width: 1100px;
+  margin: auto;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
 }
 
-/* header */
-
-.header{
-background:#0b2c6f;
-color:white;
-padding:12px 20px;
-font-size:20px;
-font-weight:600;
-text-align:center;
-margin-bottom:20px;
-border-radius:10px;
+.header {
+  background: #0b2c6f;
+  color: white;
+  padding: 12px 20px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  border-radius: 10px;
 }
 
-/* drag drop */
-
-#dropArea{
-border:2px dashed #2d7ef7;
-padding:35px;
-text-align:center;
-border-radius:10px;
-cursor:pointer;
-background:#f8fbff;
-font-size:16px;
-color:#555;
+/* drag & drop zone */
+#dropZone {
+  border: 2px dashed #2d7ef7;
+  padding: 35px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #f8fbff;
+  font-size: 16px;
+  color: #555;
+  position: relative;
 }
 
-#dropArea span{
-font-size:13px;
-color:#888;
+#dropZone p {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: #444;
 }
 
-#dropArea:hover{
-background:#eef5ff;
+#dropZone span {
+  font-size: 13px;
+  color: #888;
 }
 
-/* hide file input */
-
-#dropArea input{
-display:none;
+#dropZone:hover {
+  background: #eef5ff;
+  border-color: #1b63c7;
 }
 
-
-/* steps */
-
-.step{
-border:1px solid #e5e5e5;
-padding:18px;
-margin-bottom:20px;
-border-radius:10px;
-background:#fafafa;
-transition:0.2s;
+/* overlay the file input over the entire drop zone */
+#dropZone input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
-.step:hover{
-box-shadow:0 5px 15px rgba(0,0,0,0.08);
+.step {
+  border: 1px solid #e5e5e5;
+  padding: 18px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: #fafafa;
+  transition: 0.2s;
 }
 
-/* inputs */
-
-input[type="file"]{
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
-background:white;
+.step:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
 }
 
-/* select */
-
-select{
-padding:7px 10px;
-border-radius:6px;
-border:1px solid #ccc;
+select {
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-/* buttons */
-
-button{
-padding:9px 16px;
-border:none;
-border-radius:7px;
-cursor:pointer;
-background:#2d7ef7;
-color:white;
-font-size:14px;
-font-weight:500;
-transition:0.2s;
+button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  background: #2d7ef7;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  transition: 0.2s;
 }
 
-button:hover{
-background:#1b5fd6;
-transform:translateY(-1px);
+button:hover {
+  background: #1b5fd6;
+  transform: translateY(-1px);
 }
 
-/* generate button */
-
-button[onclick="generatePDF()"]{
-background:#2dbb63;
-font-size:18px;
-padding:12px 30px;
+.btn-generate {
+  background: #2dbb63;
+  font-size: 18px;
+  padding: 12px 30px;
 }
 
-button[onclick="generatePDF()"]:hover{
-background:#239e52;
+.btn-generate:hover {
+  background: #239e52;
 }
 
-/* preview */
-
-#preview{
-display:flex;
-gap:12px;
-flex-wrap:wrap;
-margin-top:12px;
+#preview {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
-/* thumbnails */
-
-.thumb{
-position:relative;
-display:inline-block;
+.thumb {
+  position: relative;
+  display: inline-block;
 }
 
-.thumb img{
-width:120px;
-border:2px solid #ccc;
-cursor:pointer;
-border-radius:8px;
-transition:0.2s;
+.thumb img {
+  width: 120px;
+  border: 2px solid #ccc;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.2s;
 }
 
-.thumb img:hover{
-transform:scale(1.05);
+.thumb img:hover {
+  transform: scale(1.05);
 }
 
-.thumb img.active{
-border:3px solid #2dbb63;
+.thumb img.active {
+  border: 3px solid #2dbb63;
 }
 
-/* delete button */
-
-.deleteBtn{
-position:absolute;
-top:-5px;
-right:-5px;
-background:red;
-color:white;
-border:none;
-font-size:12px;
-cursor:pointer;
-border-radius:50%;
-width:20px;
-height:20px;
+.deleteBtn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  line-height: 20px;
+  text-align: center;
 }
 
-/* crop section */
-
-#cropSection{
-display:none;
-margin-top:15px;
-position:relative;
-text-align:center;
+#cropSection {
+  display: none;
+  margin-top: 15px;
+  text-align: center;
 }
 
-#cropImage{
-max-width:100%;
-max-height:420px;
-border-radius:8px;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
+#cropImage {
+  max-width: 100%;
+  max-height: 420px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* head guideline */
-
-#guideLine{
-position:absolute;
-left:0;
-right:0;
-height:2px;
-background:red;
-top:40%;
-pointer-events:none;
+#guideLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: red;
+  top: 40%;
+  pointer-events: none;
 }
 
-/* tools */
-
-.tools button{
-margin:5px;
+.tools button {
+  margin: 5px;
 }
 
-/* footer */
-.footer{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:#0b2c6f;
-color:#fff;
-text-align:center;
-padding:8px;
-font-size:13px;
-}
-.drop-zone{
-border:2px dashed #2d7ef7;
-border-radius:10px;
-padding:40px;
-text-align:center;
-cursor:pointer;
-background:#f7f9fc;
-transition:0.3s;
-position:relative;
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #0b2c6f;
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
 }
 
-.drop-zone:hover{
-background:#eef4ff;
-border-color:#1b63c7;
-}
-
-.drop-zone p{
-font-size:18px;
-font-weight:600;
-margin:0;
-color:#444;
-}
-
-.drop-zone span{
-font-size:14px;
-color:#888;
-}
-
-/* Hide default file input */
-.drop-zone input{
-position:absolute;
-width:100%;
-height:100%;
-left:0;
-top:0;
-opacity:0;
-cursor:pointer;
-}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<h2>Onpoint Services Passport Photo Editor</h2>
 
-<div class="step">
+  <!-- Single, clean heading -->
+  <div class="header">Onpoint Services Passport Photo Editor</div>
 
-<b>1. Upload Photos</b><br><br>
+  <!-- Step 1: Upload -->
+  <div class="step">
+    <b>1. Upload Photos</b><br><br>
+    <div id="dropZone">
+      <p>Drag &amp; Drop Photo Here</p>
+      <span>or click to upload</span>
+      <input type="file" id="upload" multiple accept="image/*">
+    </div>
+    <div id="preview"></div>
+  </div>
 
-<input type="file" id="upload" multiple accept="image/*">
+  <!-- Step 2: Size -->
+  <div class="step">
+    <b>2. Select Size</b><br><br>
+    <select id="ratio">
+      <option value="30x37">3 x 3.7 cm</option>
+      <option value="35x45">3.5 x 4.5 cm</option>
+    </select>
+  </div>
 
-<div id="preview"></div>
+  <!-- Step 3: Crop -->
+  <div class="step">
+    <b>3. Crop Photo</b><br><br>
+    <button onclick="openCrop()">Open Crop</button>
+    <div id="cropSection">
+      <img id="cropImage" alt="Photo to crop">
+      <div id="guideLine"></div>
+      <br><br>
+      <button onclick="zoomIn()">Zoom +</button>
+      <button onclick="zoomOut()">Zoom -</button>
+      <br><br>
+      <button onclick="applyCrop()">Apply</button>
+      <button onclick="closeCrop()">Cancel</button>
+    </div>
+  </div>
 
-</div>
+  <!-- Step 4: Adjustments -->
+  <div class="step">
+    <b>4. Adjustments</b><br><br>
+    <div class="tools">
+      <button onclick="brightness(20)">Brightness +</button>
+      <button onclick="brightness(-20)">Brightness -</button>
+      <button onclick="contrast(20)">Contrast +</button>
+      <button onclick="contrast(-20)">Contrast -</button>
+      <button onclick="setBG('white')">White BG</button>
+      <button onclick="setBG('blue')">Blue BG</button>
+      <button onclick="resetImage()">Reset</button>
+    </div>
+  </div>
 
-<div class="step">
-
-<b>2. Select Size</b><br><br>
-
-<select id="ratio">
-<option value="30x37">3 x 3.7 cm</option>
-<option value="35x45">3.5 x 4.5 cm</option>
-</select>
-
-</div>
-
-<div class="step">
-
-<b>3. Crop Photo</b><br><br>
-
-<button onclick="openCrop()">Open Crop</button>
-
-<div id="cropSection">
-
-<img id="cropImage">
-<div id="guideLine"></div>
-
-<br><br>
-
-<button onclick="zoomIn()">Zoom +</button>
-<button onclick="zoomOut()">Zoom -</button>
-
-<br><br>
-
-<button onclick="applyCrop()">Apply</button>
-<button onclick="closeCrop()">Cancel</button>
-
-</div>
-
-</div>
-
-<div class="step">
-
-<b>4. Adjustments</b><br>
-
-<div class="tools">
-
-<button onclick="brightness(20)">Brightness +</button>
-<button onclick="brightness(-20)">Brightness -</button>
-
-<button onclick="contrast(20)">Contrast +</button>
-<button onclick="contrast(-20)">Contrast -</button>
-
-<button onclick="setBG('white')">White BG</button>
-<button onclick="setBG('blue')">Blue BG</button>
-
-<button onclick="resetImage()">Reset</button>
+  <!-- Step 5: Quantity & Generate -->
+  <div class="step">
+    <b>5. Quantity</b><br><br>
+    <select id="qty"></select>
+    <br><br>
+    <button class="btn-generate" onclick="generatePDF()">Generate PDF</button>
+  </div>
 
 </div>
 
-</div>
-
-<div class="step">
-
-<b>5. Quantity</b><br><br>
-
-<select id="qty"></select>
-
-<br><br>
-
-<button onclick="generatePDF()" style="font-size:18px;padding:12px 30px;background:#2dbb63">
-Generate PDF
-</button>
-
-</div>
-
+<div class="footer">
+  Onpoint Services &bull; Developed by Saurabh Ajinath Kharat &bull; &copy; 2026
 </div>
 
 <script>
 
-const {jsPDF}=window.jspdf;
+const { jsPDF } = window.jspdf;
 
-let images=[];
-let currentIndex=0;
+let images = [];
+let currentIndex = 0;
 let cropper;
 
-let canvas=document.createElement("canvas");
-let ctx=canvas.getContext("2d");
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
+let originalImg = new Image();
 
-let originalImg=new Image();
-
-const sizes={
-"30x37":{w:30,h:37},
-"35x45":{w:35,h:45}
+const sizes = {
+  "30x37": { w: 30, h: 37 },
+  "35x45": { w: 35, h: 45 }
 };
 
-const MM_TO_PX=300/25.4;
+const MM_TO_PX = 300 / 25.4;
 
-/* quantity */
-
-function updateQty(){
-
-let r=document.getElementById("ratio").value;
-let q=document.getElementById("qty");
-
-q.innerHTML="";
-
-if(r=="30x37"){
-[6,12,18,42].forEach(v=>{
-let o=document.createElement("option");
-o.value=v;
-o.text=v+" photos";
-q.appendChild(o);
-});
+/* ── Quantity dropdown ── */
+function updateQty() {
+  const r = document.getElementById("ratio").value;
+  const q = document.getElementById("qty");
+  q.innerHTML = "";
+  const options = r === "30x37" ? [6, 12, 18, 42] : [4, 8, 12, 16];
+  options.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.text = v + " photos";
+    q.appendChild(o);
+  });
 }
 
-if(r=="35x45"){
-[4,8,12,16].forEach(v=>{
-let o=document.createElement("option");
-o.value=v;
-o.text=v+" photos";
-q.appendChild(o);
-});
-}
-
-}
-
-document.getElementById("ratio").onchange=updateQty;
+document.getElementById("ratio").onchange = updateQty;
 updateQty();
 
-/* upload */
+/* ── Drag & drop ── */
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("upload");
 
-document.getElementById("upload").onchange=function(e){
-
-images=[];
-const preview=document.getElementById("preview");
-preview.innerHTML="";
-
-const files=e.target.files;
-
-for(let i=0;i<files.length;i++){
-
-const reader=new FileReader();
-
-reader.onload=function(ev){
-
-let img=new Image();
-
-img.onload=function(){
-
-images[i]=img;
-
-let wrapper=document.createElement("div");
-wrapper.className="thumb";
-
-let thumb=document.createElement("img");
-thumb.src=img.src;
-thumb.draggable=true;
-
-thumb.onclick=function(){
-
-currentIndex=i;
-originalImg=images[i];
-
-document.querySelectorAll("#preview img").forEach(x=>x.classList.remove("active"));
-thumb.classList.add("active");
-
-drawCanvas();
-
-};
-
-let del=document.createElement("button");
-del.innerText="X";
-del.className="deleteBtn";
-
-del.onclick=function(ev){
-
-ev.stopPropagation();
-
-images.splice(i,1);
-wrapper.remove();
-
-};
-
-wrapper.appendChild(thumb);
-wrapper.appendChild(del);
-
-preview.appendChild(wrapper);
-
-if(i==0){
-originalImg=img;
-thumb.classList.add("active");
-drawCanvas();
-}
-
-};
-
-img.src=ev.target.result;
-
-};
-
-reader.readAsDataURL(files[i]);
-
-}
-
-};
-
-/* draw */
-
-function drawCanvas(){
-
-let r=document.getElementById("ratio").value;
-
-canvas.width=sizes[r].w*MM_TO_PX;
-canvas.height=sizes[r].h*MM_TO_PX;
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.drawImage(originalImg,0,0,canvas.width,canvas.height);
-
-}
-
-/* crop */
-
-function openCrop(){
-
-document.getElementById("cropSection").style.display="block";
-
-let img=document.getElementById("cropImage");
-img.src=originalImg.src;
-
-let r=document.getElementById("ratio").value;
-let aspect=sizes[r].w/sizes[r].h;
-
-if(cropper)cropper.destroy();
-
-cropper=new Cropper(img,{
-aspectRatio:aspect,
-viewMode:1
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.style.background = "#e8f2ff";
 });
 
-}
-
-function zoomIn(){cropper.zoom(0.1)}
-function zoomOut(){cropper.zoom(-0.1)}
-
-function applyCrop(){
-
-let cropped=cropper.getCroppedCanvas({
-width:canvas.width,
-height:canvas.height
+dropZone.addEventListener("dragleave", () => {
+  dropZone.style.background = "#f8fbff";
 });
 
-let data=cropped.toDataURL();
-
-images[currentIndex].src=data;
-originalImg.src=data;
-
-drawCanvas();
-
-closeCrop();
-
-}
-
-function closeCrop(){
-
-document.getElementById("cropSection").style.display="none";
-cropper.destroy();
-
-}
-
-/* adjustments */
-
-function brightness(v){
-
-let img=ctx.getImageData(0,0,canvas.width,canvas.height);
-let d=img.data;
-
-for(let i=0;i<d.length;i+=4){
-d[i]+=v;
-d[i+1]+=v;
-d[i+2]+=v;
-}
-
-ctx.putImageData(img,0,0);
-images[currentIndex].src=canvas.toDataURL();
-
-}
-
-function contrast(v){
-
-let img=ctx.getImageData(0,0,canvas.width,canvas.height);
-let d=img.data;
-
-let f=(259*(v+255))/(255*(259-v));
-
-for(let i=0;i<d.length;i+=4){
-
-d[i]=f*(d[i]-128)+128;
-d[i+1]=f*(d[i+1]-128)+128;
-d[i+2]=f*(d[i+2]-128)+128;
-
-}
-
-ctx.putImageData(img,0,0);
-images[currentIndex].src=canvas.toDataURL();
-
-}
-
-function setBG(color){
-
-ctx.fillStyle=color;
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.drawImage(originalImg,0,0,canvas.width,canvas.height);
-
-images[currentIndex].src=canvas.toDataURL();
-
-}
-
-function resetImage(){
-drawCanvas();
-}
-
-/* pdf */
-
-function generatePDF(){
-
-let ratio=document.getElementById("ratio").value;
-let qty=parseInt(document.getElementById("qty").value);
-
-let w=sizes[ratio].w;
-let h=sizes[ratio].h;
-
-let orientation = (ratio=="35x45") ? "l" : "p";
-
-let doc=new jsPDF(orientation,"mm","a4");
-
-let pageWidth = (orientation=="l") ? 297 : 210;
-let pageHeight = (orientation=="l") ? 210 : 297;
-
-let margin=5;
-let x=margin;
-let y=margin;
-
-let colCount=0;
-
-images.forEach(img=>{
-
-for(let i=0;i<qty;i++){
-
-doc.addImage(img.src,"JPEG",x,y,w,h);
-
-doc.setLineWidth(0.25);
-doc.rect(x,y,w,h);
-
-doc.setDrawColor(0);
-
-doc.line(x,y,x+w,y);
-doc.line(x,y,x,y+h);
-doc.line(x+w,y,x+w,y+h);
-doc.line(x,y+h,x+w,y+h);
-
-colCount++;
-
-if(ratio=="35x45"){   // 4 photos per row
-
-if(colCount==4){
-colCount=0;
-x=margin;
-y+=h+4;
-}else{
-x+=w+4;
-}
-
-}else{  // old layout for 3x3.7
-
-x+=w+4;
-
-if(x+w>pageWidth){
-x=margin;
-y+=h+4;
-}
-
-}
-
-if(y+h>pageHeight){
-doc.addPage();
-x=margin;
-y=margin;
-colCount=0;
-}
-
-}
-
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  // Transfer dropped files to the file input and trigger change
+  const dt = e.dataTransfer;
+  fileInput.files = dt.files;
+  fileInput.dispatchEvent(new Event("change"));
+  dropZone.style.background = "#f8fbff";
 });
 
-doc.save("passport_photos.pdf");
+/* ── Upload & preview ── */
+fileInput.onchange = function(e) {
+  images = [];
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+  const files = e.target.files;
 
+  for (let i = 0; i < files.length; i++) {
+    const reader = new FileReader();
+    // Capture i in a closure so it stays correct inside async callbacks
+    (function(index) {
+      reader.onload = function(ev) {
+        let img = new Image();
+        img.onload = function() {
+          images[index] = img;
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "thumb";
+
+          const thumb = document.createElement("img");
+          thumb.src = img.src;
+          thumb.alt = "Uploaded photo " + (index + 1);
+
+          thumb.onclick = function() {
+            currentIndex = index;
+            originalImg = images[index];
+            document.querySelectorAll("#preview img").forEach(x => x.classList.remove("active"));
+            thumb.classList.add("active");
+            drawCanvas();
+          };
+
+          const del = document.createElement("button");
+          del.innerText = "X";
+          del.className = "deleteBtn";
+          del.setAttribute("aria-label", "Delete photo");
+          del.onclick = function(ev) {
+            ev.stopPropagation();
+            images.splice(index, 1);
+            wrapper.remove();
+          };
+
+          wrapper.appendChild(thumb);
+          wrapper.appendChild(del);
+          preview.appendChild(wrapper);
+
+          if (index === 0) {
+            originalImg = img;
+            thumb.classList.add("active");
+            drawCanvas();
+          }
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(files[index]);
+    })(i);
+  }
+};
+
+/* ── Canvas draw ── */
+function drawCanvas() {
+  const r = document.getElementById("ratio").value;
+  canvas.width  = sizes[r].w * MM_TO_PX;
+  canvas.height = sizes[r].h * MM_TO_PX;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+}
+
+/* ── Crop ── */
+function openCrop() {
+  document.getElementById("cropSection").style.display = "block";
+  const img = document.getElementById("cropImage");
+  img.src = originalImg.src;
+  const r = document.getElementById("ratio").value;
+  const aspect = sizes[r].w / sizes[r].h;
+  if (cropper) cropper.destroy();
+  cropper = new Cropper(img, { aspectRatio: aspect, viewMode: 1 });
+}
+
+function zoomIn()  { cropper.zoom(0.1);  }
+function zoomOut() { cropper.zoom(-0.1); }
+
+function applyCrop() {
+  const cropped = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
+  const data = cropped.toDataURL();
+  images[currentIndex].src = data;
+  originalImg.src = data;
+  drawCanvas();
+  closeCrop();
+}
+
+function closeCrop() {
+  document.getElementById("cropSection").style.display = "none";
+  cropper.destroy();
+}
+
+/* ── Adjustments ── */
+function brightness(v) {
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.min(255, Math.max(0, d[i]   + v));
+    d[i+1] = Math.min(255, Math.max(0, d[i+1] + v));
+    d[i+2] = Math.min(255, Math.max(0, d[i+2] + v));
+  }
+  ctx.putImageData(img, 0, 0);
+  images[currentIndex].src = canvas.toDataURL();
+}
+
+function contrast(v) {
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  const f = (259 * (v + 255)) / (255 * (259 - v));
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.min(255, Math.max(0, f * (d[i]   - 128) + 128));
+    d[i+1] = Math.min(255, Math.max(0, f * (d[i+1] - 128) + 128));
+    d[i+2] = Math.min(255, Math.max(0, f * (d[i+2] - 128) + 128));
+  }
+  ctx.putImageData(img, 0, 0);
+  images[currentIndex].src = canvas.toDataURL();
+}
+
+function setBG(color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+  images[currentIndex].src = canvas.toDataURL();
+}
+
+function resetImage() {
+  drawCanvas();
+}
+
+/* ── PDF generation ── */
+function generatePDF() {
+  const ratio = document.getElementById("ratio").value;
+  const qty   = parseInt(document.getElementById("qty").value);
+  const w = sizes[ratio].w;
+  const h = sizes[ratio].h;
+
+  const orientation = (ratio === "35x45") ? "l" : "p";
+  const doc = new jsPDF(orientation, "mm", "a4");
+
+  const pageWidth  = (orientation === "l") ? 297 : 210;
+  const pageHeight = (orientation === "l") ? 210 : 297;
+
+  const margin = 5;
+  let x = margin, y = margin, colCount = 0;
+
+  images.forEach(img => {
+    for (let i = 0; i < qty; i++) {
+      doc.addImage(img.src, "JPEG", x, y, w, h);
+      doc.setLineWidth(0.25);
+      doc.setDrawColor(0);
+      doc.rect(x, y, w, h);
+
+      colCount++;
+
+      if (ratio === "35x45") {
+        if (colCount === 4) { colCount = 0; x = margin; y += h + 4; }
+        else { x += w + 4; }
+      } else {
+        x += w + 4;
+        if (x + w > pageWidth) { x = margin; y += h + 4; }
+      }
+
+      if (y + h > pageHeight) {
+        doc.addPage();
+        x = margin; y = margin; colCount = 0;
+      }
+    }
+  });
+
+  doc.save("passport_photos.pdf");
 }
 
 </script>
-<div class="footer">
-Onpoint Services • Developed by Saurabh Ajinath Kharat • © 2026
-</div>
 </body>
 </html>
