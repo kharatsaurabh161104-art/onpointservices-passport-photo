@@ -337,7 +337,7 @@
             const cardWidth = SMART_CARD_WIDTH;
             const cardHeight = SMART_CARD_HEIGHT;
             
-            const totalCardsWidth = (cardWidth * 2) + 20;
+            const totalCardsWidth = (cardWidth * 2) + 2.5;
             const leftMargin = (210 - totalCardsWidth) / 2;
             const topMargin = 5;
             
@@ -346,7 +346,7 @@
             }
             
             if (croppedImages[1]) {
-                doc.addImage(croppedImages[1].data, 'PNG', leftMargin + cardWidth + 20, topMargin, cardWidth, cardHeight);
+                doc.addImage(croppedImages[1].data, 'PNG', leftMargin + cardWidth + 2.5, topMargin, cardWidth, cardHeight);
             }
             // Border: 0.25pt ≈ 0.2mm
             const borderWidth = 0.2;
@@ -359,7 +359,7 @@
             // Add border around BACK card
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(borderWidth);
-            doc.rect(leftMargin + cardWidth + 20, topMargin, cardWidth, cardHeight);
+            doc.rect(leftMargin + cardWidth + 2.5, topMargin, cardWidth, cardHeight);
             doc.save('aadhaar-smartcard.pdf');
         }
 
