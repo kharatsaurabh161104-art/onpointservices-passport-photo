@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadhaar Smart Card Creator</title>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+        /* ── Header ── */
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; 
+            flex-direction: column;     /* ← Stack vertically */
+            align-items: center; 
+            gap: 20px;                  /* ← Space between elements */
+            padding-bottom: 80px; 
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .header {
+            width: 100%;
+            max-width: 900px;
+            background: linear-gradient(135deg, #1a2a6c 0%, #0b2c6f 100%);
+            color: white;
+            padding: 24px 20px;
+            font-size: 26px;
+            font-weight: 700;
+            text-align: center;
+            margin: 0 auto 20px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            letter-spacing: 0.5px;
+        }
+        .container { background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 900px; width: 100%; padding: 3rem; }
+        h1 { font-size: 28px; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+        .subtitle { color: #666; margin-bottom: 2rem; font-size: 15px; }
+        
+        .drop-zone { border: 3px dashed #667eea; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; background: #f8f9ff; transition: all 0.3s; }
+        .drop-zone:hover { border-color: #764ba2; background: #f0f1ff; }
+        .drop-zone.active { background: #e9ebff; }
+        
+        .password-section { margin-top: 2rem; padding: 2rem; background: #f0f1ff; border-radius: 12px; border: 2px solid #667eea; display: none; }
+        .password-section.show { display: block; }
+        .password-section h3 { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 1rem; }
+        .password-section p { color: #666; margin-bottom: 1rem; font-size: 14px; }
+        
+        .password-input { text-transform: uppercase;
+        letter-spacing: 0.05em; width: 100%; padding: 0.875rem 1rem; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 1rem; transition: border-color 0.2s; }
+        .password-input:focus { outline: none; border-color: #667eea; }
+        
+        .unlock-btn { width: 100%; padding: 0.875rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; transition: all 0.2s; }
+        .unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
+        
+        .password-error { color: #c62828; font-size: 14px; margin-bottom: 1rem; display: none; }
+        .password-error.show { display: block; }
+        .password-success { color: #2e7d32; font-size: 14px; margin-bottom: 1rem; display: none; }
+        .password-success.show { display: block; }
+        
+        input[type="file"] { display: none; }
+        
+        .status-message { padding: 1rem 1.5rem; border-radius: 8px; margin: 1.5rem 0; font-size: 14px; display: none; }
+        .status-message.show { display: block; }
+        .status-loading { background: #e3f2fd; color: #1565c0; border-left: 4px solid #1565c0; }
+        .status-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin: 2rem 0; display: none; }
+        .preview-grid.show { display: grid; }
+        .preview-card { background: white; border: 3px solid #667eea; border-radius: 12px; overflow: hidden; aspect-ratio: 1.587; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .preview-card:hover { transform: translateY(-6px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+        .preview-card-label { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem; text-align: center; font-size: 13px; font-weight: 700; }
+        .preview-card img { width: 100%; flex: 1; object-fit: contain; padding: 0.3rem; }
+        
+        .button-group { display: flex; gap: 12px; justify-content: center; margin: 2rem 0; flex-wrap: wrap; display: none; }
+        .button-group.show { display: flex; }
+        button { padding: 0.875rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        .btn-secondary:hover { background: #f8f9ff; }
+        .btn-danger { background: #ffebee; color: #c62828; border: 2px solid #c62828; }
+        .btn-danger:hover { background: #ffcdd2; }
+        h2 { margin: 2rem 0 0.5rem 0; font-size: 18px; font-weight: 600; color: #333; display: none; }
+        h2.show { display: block; }
+        .section-subtitle { color: #666; font-size: 14px; margin-bottom: 1.5rem; display: none; }
+        .section-subtitle.show { display: block; }
+        .file-info { background: #e3f2fd; color: #1565c0; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        .file-info.show { display: block; }
+
+
+        /* ── Footer ── */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #0b2c6f;
+            color: #fff;
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">Onpoint Services Adhar Smart Card</div>
+
+    <div class="container">
+        <div id="pdfPasswordSection">
+            <h1>🔐 Aadhaar Smart Card Creator</h1>
+            <p class="subtitle">Upload password-protected PDF and unlock it</p>
+            
+            <input id="fileInput" type="file" accept=".pdf">
+            <div class="drop-zone" id="dropZone">
+                <p style="font-size: 18px; font-weight: 600; margin-bottom: 0.5rem;">📄 Drop your PDF here</p>
+                <p style="color: #666;">or click to browse</p>
+            </div>
+            
+            <div class="file-info" id="fileInfo"></div>
+            
+            <div class="password-section" id="passwordSection">
+                <h3>🔓 Enter PDF Password</h3>
+                <p>This PDF is password protected. Please enter the password to unlock it.</p>
+                <div class="password-error" id="passwordError"></div>
+                <div class="password-success" id="passwordSuccess"></div>
+                <input type="password" id="pdfPasswordInput" class="password-input" placeholder="Enter PDF password" autocomplete="off">
+                <button class="unlock-btn" id="unlockBtn">Unlock PDF</button>
+                <button class="btn-danger" id="changePdfBtn" style="margin-top: 0.5rem;">Change PDF File</button>
+            </div>
+            
+            <div class="status-message status-loading" id="statusLoading">⏳ Processing...</div>
+        </div>
+        
+        <div id="mainContainer" style="display: none;">
+            <h1>✂️ Smart Cards Extracted</h1>
+            <p class="subtitle">Front and Back cards (85.6mm × 53.98mm each)</p>
+            
+            <div class="status-message status-success" id="statusSuccess"></div>
+            
+            <h2 id="previewTitle">Preview</h2>
+            <p class="section-subtitle" id="previewSubtitle">Extracted cards from your Aadhaar PDF</p>
+            
+            <div class="preview-grid" id="previewGrid"></div>
+            
+            <div class="button-group" id="buttonGroup">
+                <button class="btn-secondary" id="uploadNewBtn">Upload New PDF</button>
+                <button class="btn-primary" id="downloadBtn">↗ Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfLib = window.pdfjsLib || window.pdfjs;
+        if (pdfLib && !pdfLib.GlobalWorkerOptions.workerSrc) {
+            pdfLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        }
+
+        // तुमच्या PDF मापनांशी perfectly fit होईल
+        // ✅ FIXED SIZE - कोणतेही बदल नाही!
+        const SMART_CARD_WIDTH = 85;       // 8.5 cm = 85 mm
+        const SMART_CARD_HEIGHT = 55;      // 5.5 cm = 55 mm
+        const ASPECT_RATIO = SMART_CARD_WIDTH / SMART_CARD_HEIGHT;
+
+        const PAGE_WIDTH = 210;
+        const PAGE_HEIGHT = 297;
+
+        // COMMON (दोनही साठी)
+        const CROP_TOP = 215;      // 20.7cm = 207mm
+        const CROP_BOTTOM = 21.8;    // 3.5cm = 35mm
+
+        // FRONT SIDE (डावीकडून crop करा)
+        const FRONT_LEFT = 19.5;     // 2cm = 20mm
+        const FRONT_RIGHT = 106.4;   // 10.6cm = 106mm
+
+        // BACK SIDE (उजवीकडून crop करा) 
+        const BACK_LEFT = 106.6;     // 10.6cm = 106mm
+        const BACK_RIGHT = 19.5;     // 2cm = 20mm
+
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileInfo = document.getElementById('fileInfo');
+        const passwordSection = document.getElementById('passwordSection');
+        const pdfPasswordInput = document.getElementById('pdfPasswordInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const changePdfBtn = document.getElementById('changePdfBtn');
+        const statusLoading = document.getElementById('statusLoading');
+        const pdfPasswordSection = document.getElementById('pdfPasswordSection');
+        const mainContainer = document.getElementById('mainContainer');
+        const statusSuccess = document.getElementById('statusSuccess');
+        const previewGrid = document.getElementById('previewGrid');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewSubtitle = document.getElementById('previewSubtitle');
+        const buttonGroup = document.getElementById('buttonGroup');
+        const uploadNewBtn = document.getElementById('uploadNewBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const passwordError = document.getElementById('passwordError');
+        const passwordSuccess = document.getElementById('passwordSuccess');
+
+        let currentPdfFile = null;
+        let croppedImages = [];
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            if (e.dataTransfer.files[0]?.type === 'application/pdf') {
+                handlePdfUpload(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => e.target.files[0] && handlePdfUpload(e.target.files[0]));
+        // Auto convert password to UPPERCASE
+        pdfPasswordInput.addEventListener('input', (e) => {
+          e.target.value = e.target.value.toUpperCase();
+        });
+
+        function handlePdfUpload(file) {
+            currentPdfFile = file;
+            fileInfo.textContent = '📄 File: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+            fileInfo.classList.add('show');
+            passwordSection.classList.add('show');
+            passwordError.classList.remove('show');
+            passwordSuccess.classList.remove('show');
+            pdfPasswordInput.value = '';
+            pdfPasswordInput.focus();
+        }
+
+        unlockBtn.addEventListener('click', unlockPdf);
+        pdfPasswordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') unlockPdf(); });
+
+        async function unlockPdf() {
+            if (!currentPdfFile) return;
+
+            const password = pdfPasswordInput.value;
+            statusLoading.classList.add('show');
+            passwordError.classList.remove('show');
+            passwordSuccess.classList.remove('show');
+
+            try {
+                const arrayBuffer = await currentPdfFile.arrayBuffer();
+                const pdf = await pdfLib.getDocument({ data: arrayBuffer, password: password }).promise;
+
+                const extractedImages = [];
+                for (let i = 0; i < pdf.numPages; i++) {
+                    const page = await pdf.getPage(i + 1);
+                    const viewport = page.getViewport({ scale: 4.0 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    extractedImages.push(canvas.toDataURL('image/png'));
+                }
+
+                statusLoading.classList.remove('show');
+                passwordSuccess.textContent = '✓ PDF unlocked successfully! Processing...';
+                passwordSuccess.classList.add('show');
+
+                setTimeout(() => { cropImages(extractedImages); }, 500);
+
+            } catch (err) {
+                statusLoading.classList.remove('show');
+                if (err.name === 'PasswordException') {
+                    passwordError.textContent = '❌ Incorrect password. Please try again.';
+                } else {
+                    passwordError.textContent = '❌ Error: ' + err.message;
+                }
+                passwordError.classList.add('show');
+                pdfPasswordInput.value = '';
+                pdfPasswordInput.focus();
+            }
+        }
+
+        function cropImages(imagesToCrop) {
+            let processedCount = 0;
+            croppedImages = [];
+
+            imagesToCrop.forEach((imgSrc) => {
+                const img = new Image();
+                img.onload = () => {
+                    const imgHeight = img.height;
+                    const imgWidth = img.width;
+                    const pixelsPerMmX = imgWidth / PAGE_WIDTH;
+                    const pixelsPerMmY = imgHeight / PAGE_HEIGHT;
+                    const cropTopPx = CROP_TOP * pixelsPerMmY;
+                    const cropBottomPx = CROP_BOTTOM * pixelsPerMmY;
+                    const frontLeftPx = FRONT_LEFT * pixelsPerMmX;
+                    const frontRightPx = FRONT_RIGHT * pixelsPerMmX;
+                    const backLeftPx = BACK_LEFT * pixelsPerMmX;
+                    const backRightPx = BACK_RIGHT * pixelsPerMmX;
+                    const cropHeight = imgHeight - cropTopPx - cropBottomPx;
+
+                    const canvasFront = document.createElement('canvas');
+                    canvasFront.width = 1000;
+                    canvasFront.height = Math.round(1000 / ASPECT_RATIO);
+                    canvasFront.getContext('2d').drawImage(img, frontLeftPx, cropTopPx, imgWidth - frontLeftPx - frontRightPx, cropHeight, 0, 0, canvasFront.width, canvasFront.height);
+                    croppedImages.push({ data: canvasFront.toDataURL('image/png', 0.95 ), side: 'FRONT' });
+
+                    const canvasBack = document.createElement('canvas');
+                    canvasBack.width = 1000;
+                    canvasBack.height = Math.round(1000 / ASPECT_RATIO);
+                    canvasBack.getContext('2d').drawImage(img, backLeftPx, cropTopPx, imgWidth - backLeftPx - backRightPx, cropHeight, 0, 0, canvasBack.width, canvasBack.height);
+                    croppedImages.push({ data: canvasBack.toDataURL('image/png',0.95 ), side: 'BACK' });
+
+                    processedCount++;
+                    if (processedCount === imagesToCrop.length) showCroppedImages();
+                };
+                img.src = imgSrc;
+            });
+        }
+
+        function showCroppedImages() {
+            pdfPasswordSection.style.display = 'none';
+            mainContainer.style.display = 'block';
+            statusSuccess.textContent = '✓ Successfully extracted ' + croppedImages.length + ' card(s)';
+            statusSuccess.classList.add('show');
+            previewTitle.classList.add('show');
+            previewSubtitle.classList.add('show');
+            previewGrid.classList.add('show');
+            buttonGroup.classList.add('show');
+            
+            previewGrid.innerHTML = '';
+            croppedImages.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'preview-card';
+                cardDiv.innerHTML = `<div class="preview-card-label">${card.side}</div><img src="${card.data}" alt="${card.side}">`;
+                previewGrid.appendChild(cardDiv);
+            });
+        }
+
+        async function downloadPDF() {
+            const jsPDF = window.jspdf.jsPDF;
+            const doc = new jsPDF({orientation: 'portrait', unit: 'mm', format: 'a4'});
+            
+            const cardWidth = SMART_CARD_WIDTH;
+            const cardHeight = SMART_CARD_HEIGHT;
+            
+            const totalCardsWidth = (cardWidth * 2) + 20;
+            const leftMargin = (210 - totalCardsWidth) / 2;
+            const topMargin = 5;
+            
+            if (croppedImages[0]) {
+                doc.addImage(croppedImages[0].data, 'PNG', leftMargin, topMargin, cardWidth, cardHeight);
+            }
+            
+            if (croppedImages[1]) {
+                doc.addImage(croppedImages[1].data, 'PNG', leftMargin + cardWidth + 20, topMargin, cardWidth, cardHeight);
+            }
+            // Border: 0.25pt ≈ 0.2mm
+            const borderWidth = 0.2;
+
+            // Add border around FRONT card
+            doc.setDrawColor(0, 0, 0);      // Black color
+            doc.setLineWidth(borderWidth);  // 0.25pt
+            doc.rect(leftMargin, topMargin, cardWidth, cardHeight);
+
+            // Add border around BACK card
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(borderWidth);
+            doc.rect(leftMargin + cardWidth + 20, topMargin, cardWidth, cardHeight);
+            doc.save('aadhaar-smartcard.pdf');
+        }
+
+        function resetToUpload() {
+            fileInput.value = '';
+            currentPdfFile = null;
+            croppedImages = [];
+            pdfPasswordInput.value = '';
+            fileInfo.classList.remove('show');
+            passwordSection.classList.remove('show');
+            pdfPasswordSection.style.display = 'block';
+            mainContainer.style.display = 'none';
+            passwordError.classList.remove('show');
+            passwordSuccess.classList.remove('show');
+            previewGrid.innerHTML = '';
+            [previewTitle, previewSubtitle, previewGrid, buttonGroup].forEach(el => el.classList.remove('show'));
+        }
+
+        changePdfBtn.addEventListener('click', resetToUpload);
+        uploadNewBtn.addEventListener('click', resetToUpload);
+        downloadBtn.addEventListener('click', downloadPDF);
+    </script>
+    <!-- Footer -->
+    <footer>
+        Onpoint Services &bull; Developed by Saurabh Ajinath Kharat &bull; &copy; 2026
+    </footer>
+</body>
+</html>
