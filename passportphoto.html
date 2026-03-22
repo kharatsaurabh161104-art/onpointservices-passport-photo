@@ -277,6 +277,8 @@ body {
 
 .step:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
 
+.step.hidden { display: none; }
+
 select {
   padding: 7px 10px;
   border-radius: 6px;
@@ -346,6 +348,34 @@ button:hover { background: #1b5fd6; transform: translateY(-1px); }
 
 .tools button { margin: 5px; }
 
+.pancard-section {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.pancard-section h3 {
+  margin-top: 0;
+  color: #1565c0;
+}
+
+.pancard-option {
+  display: inline-block;
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+
+.pancard-option input[type="radio"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.pancard-option label {
+  cursor: pointer;
+}
+
 .footer {
   position: fixed;
   bottom: 0; left: 0; width: 100%;
@@ -400,6 +430,26 @@ button:hover { background: #1b5fd6; transform: translateY(-1px); }
         </table>
       </div>
 
+      <div class="rate-card">
+        <div class="rate-card-header">Pan Card - Photo (2.5 &times; 3.5 cm)</div>
+        <table>
+          <tr><th>Details</th><th>Value</th></tr>
+          <tr><td>Size</td><td>2.5 &times; 3.5 cm</td></tr>
+          <tr><td>Download Size</td><td>18 KB</td></tr>
+          <tr><td>Format</td><td>JPEG</td></tr>
+        </table>
+      </div>
+
+      <div class="rate-card">
+        <div class="rate-card-header">Pan Card - Signature (4.5 &times; 2 cm)</div>
+        <table>
+          <tr><th>Details</th><th>Value</th></tr>
+          <tr><td>Size</td><td>4.5 &times; 2 cm</td></tr>
+          <tr><td>Download Size</td><td>9 KB</td></tr>
+          <tr><td>Format</td><td>JPEG</td></tr>
+        </table>
+      </div>
+
     </div>
 
     <div class="instructions-box">
@@ -409,9 +459,10 @@ button:hover { background: #1b5fd6; transform: translateY(-1px); }
         <li>Select the required photo size from the dropdown.</li>
         <li>Click <b>Open Crop</b> to crop the photo to the correct aspect ratio. Use Zoom + / - to adjust, then click <b>Apply</b>.</li>
         <li>Use the <b>Adjustments</b> section to fine-tune brightness, contrast, or background colour.</li>
-        <li>Select the quantity required from the dropdown.</li>
-        <li>Click <b>Generate PDF</b> — the PDF will download automatically and a record will be saved in History.</li>
+        <li>For PDF formats, select the quantity required from the dropdown.</li>
+        <li>Click <b>Generate PDF</b> or <b>Download JPEG</b> — the file will download automatically and a record will be saved in History.</li>
         <li><b>Note:</b> For 3.5 × 4.5 cm, photos are printed landscape (4.5 cm wide × 3.5 cm tall) on a portrait A4 PDF — 4 photos per row.</li>
+        <li><b>Pan Card Options:</b> Choose between Photo (2.5×3.5 cm) or Signature (4.5×2 cm). These download as single JPEG files with optimized file sizes.</li>
       </ol>
     </div>
   </div>
@@ -434,12 +485,37 @@ button:hover { background: #1b5fd6; transform: translateY(-1px); }
 
   <!-- Step 2 -->
   <div class="step">
-    <b>2. Select Size</b><br><br>
+    <b>2. Select Type</b><br><br>
+    <select id="type" onchange="updateTypeUI()">
+      <option value="passport">📕 Passport Photos</option>
+      <option value="pancard">🆔 Pan Card</option>
+    </select>
+  </div>
+
+  <!-- Step 2a: Passport Photo Size -->
+  <div id="passportSizeStep" class="step">
+    <b>2a. Select Size (Passport)</b><br><br>
     <select id="ratio">
       <option value="30x37">3 x 3.7 cm</option>
       <option value="35x45">3.5 x 4.5 cm </option>
       <option value="51x51">Indian Passport (2 x 2 inch)</option>
     </select>
+  </div>
+
+  <!-- Step 2b: Pan Card Type -->
+  <div id="pancardTypeStep" class="step hidden">
+    <b>2b. Select Pan Card Type</b><br><br>
+    <div class="pancard-section">
+      <div class="pancard-option">
+        <input type="radio" id="pancardPhoto" name="pancardType" value="photo" checked onchange="updatePancardType()">
+        <label for="pancardPhoto"><b>Photo</b> (2.5 × 3.5 cm) - Download 18 KB JPEG</label>
+      </div>
+      <br>
+      <div class="pancard-option">
+        <input type="radio" id="pancardSignature" name="pancardType" value="signature" onchange="updatePancardType()">
+        <label for="pancardSignature"><b>Signature</b> (4.5 × 2 cm) - Download 9 KB JPEG</label>
+      </div>
+    </div>
   </div>
 
   <!-- Step 3 -->
@@ -472,12 +548,18 @@ button:hover { background: #1b5fd6; transform: translateY(-1px); }
     </div>
   </div>
 
-  <!-- Step 5 -->
-  <div class="step">
+  <!-- Step 5: Quantity (for PDF) -->
+  <div id="quantityStep" class="step">
     <b>5. Quantity</b><br><br>
     <select id="qty"></select>
     <br><br>
     <button class="btn-generate" onclick="generatePDF()">Generate PDF</button>
+  </div>
+
+  <!-- Step 5: Download (for Pan Card) -->
+  <div id="downloadStep" class="step hidden">
+    <b>5. Download</b><br><br>
+    <button class="btn-generate" onclick="downloadPancardJPEG()">Download JPEG</button>
   </div>
 
 </div>
@@ -546,7 +628,7 @@ function renderHistory() {
   container.innerHTML = "";
 
   if (history.length === 0) {
-    container.innerHTML = '<div class="history-empty">No history yet. Generate a PDF to save it here.</div>';
+    container.innerHTML = '<div class="history-empty">No history yet. Generate a PDF or download to save it here.</div>';
     return;
   }
 
@@ -601,27 +683,57 @@ renderHistory();
 let images = [];
 let currentIndex = 0;
 let cropper;
+let currentType = "passport"; // "passport" or "pancard"
+let currentPancardType = "photo"; // "photo" or "signature"
 
 let canvas = document.createElement("canvas");
 let ctx = canvas.getContext("2d");
 let originalImg = new Image();
 
-// For 35x45: photo is placed LANDSCAPE on PDF → printed width=4.5cm, height=3.5cm
-// sizes stores the ORIGINAL photo dimensions (used for crop aspect ratio & canvas)
 const sizes = {
   "30x37": { w: 30, h: 37 },
-  "35x45": { w: 35, h: 45 },   // aspect ratio for cropping
-  "51x51": { w: 51, h: 51 }
+  "35x45": { w: 35, h: 45 },
+  "51x51": { w: 51, h: 51 },
+  "pancard_photo": { w: 25, h: 35 },
+  "pancard_signature": { w: 45, h: 20 }
 };
 
-// PDF placement dimensions — for 35x45, photo is rotated landscape: 4.5 wide x 3.5 tall
 const pdfSizes = {
   "30x37": { w: 30, h: 37 },
-  "35x45": { w: 45, h: 35 },   // landscape placement: width=4.5cm, height=3.5cm
+  "35x45": { w: 45, h: 35 },
   "51x51": { w: 51, h: 51 }
 };
 
 const MM_TO_PX = 300 / 25.4;
+
+function updateTypeUI() {
+  const type = document.getElementById("type").value;
+  currentType = type;
+  
+  const passportStep = document.getElementById("passportSizeStep");
+  const pancardStep = document.getElementById("pancardTypeStep");
+  const quantityStep = document.getElementById("quantityStep");
+  const downloadStep = document.getElementById("downloadStep");
+  
+  if (type === "passport") {
+    passportStep.classList.remove("hidden");
+    pancardStep.classList.add("hidden");
+    quantityStep.classList.remove("hidden");
+    downloadStep.classList.add("hidden");
+    updateQty();
+  } else {
+    passportStep.classList.add("hidden");
+    pancardStep.classList.remove("hidden");
+    quantityStep.classList.add("hidden");
+    downloadStep.classList.remove("hidden");
+    updatePancardType();
+  }
+}
+
+function updatePancardType() {
+  const selected = document.querySelector('input[name="pancardType"]:checked').value;
+  currentPancardType = selected;
+}
 
 function updateQty() {
   const r = document.getElementById("ratio").value;
@@ -640,6 +752,7 @@ function updateQty() {
 
 document.getElementById("ratio").onchange = updateQty;
 updateQty();
+updateTypeUI();
 
 /* Drag & drop */
 const dropZone = document.getElementById("dropZone");
@@ -710,9 +823,24 @@ fileInput.onchange = function(e) {
 };
 
 function drawCanvas() {
-  const r = document.getElementById("ratio").value;
-  canvas.width  = sizes[r].w * MM_TO_PX;
-  canvas.height = sizes[r].h * MM_TO_PX;
+  let w, h;
+  
+  if (currentType === "passport") {
+    const r = document.getElementById("ratio").value;
+    w = sizes[r].w;
+    h = sizes[r].h;
+  } else {
+    if (currentPancardType === "photo") {
+      w = sizes["pancard_photo"].w;
+      h = sizes["pancard_photo"].h;
+    } else {
+      w = sizes["pancard_signature"].w;
+      h = sizes["pancard_signature"].h;
+    }
+  }
+  
+  canvas.width  = w * MM_TO_PX;
+  canvas.height = h * MM_TO_PX;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
 }
@@ -721,8 +849,19 @@ function openCrop() {
   document.getElementById("cropSection").style.display = "block";
   const img = document.getElementById("cropImage");
   img.src = originalImg.src;
-  const r = document.getElementById("ratio").value;
-  const aspect = sizes[r].w / sizes[r].h;
+  
+  let aspect;
+  if (currentType === "passport") {
+    const r = document.getElementById("ratio").value;
+    aspect = sizes[r].w / sizes[r].h;
+  } else {
+    if (currentPancardType === "photo") {
+      aspect = sizes["pancard_photo"].w / sizes["pancard_photo"].h;
+    } else {
+      aspect = sizes["pancard_signature"].w / sizes["pancard_signature"].h;
+    }
+  }
+  
   if (cropper) cropper.destroy();
   cropper = new Cropper(img, { aspectRatio: aspect, viewMode: 1 });
 }
@@ -741,7 +880,7 @@ function applyCrop() {
 
 function closeCrop() {
   document.getElementById("cropSection").style.display = "none";
-  cropper.destroy();
+  if (cropper) cropper.destroy();
 }
 
 function brightness(v) {
@@ -779,6 +918,54 @@ function setBG(color) {
 function resetImage() { drawCanvas(); }
 
 /* ════════════════════════════════
+   PANCARD JPEG DOWNLOAD
+════════════════════════════════ */
+function downloadPancardJPEG() {
+  if (images.length === 0) {
+    alert("Please upload at least one photo first.");
+    return;
+  }
+
+  try {
+    const targetSize = currentPancardType === "photo" ? 18000 : 9000; // 18 KB or 9 KB in bytes
+    let quality = 0.85;
+    let jpegData;
+    
+    // Iteratively reduce quality to meet target file size
+    while (quality > 0.1) {
+      jpegData = canvas.toDataURL("image/jpeg", quality);
+      const sizeInBytes = Math.ceil((jpegData.length - 'data:image/jpeg;base64,'.length) * 0.75);
+      
+      if (sizeInBytes <= targetSize) {
+        break;
+      }
+      quality -= 0.05;
+    }
+
+    // Create download link
+    const link = document.createElement("a");
+    link.href = jpegData;
+    const fileName = currentPancardType === "photo" ? "pan_card_photo.jpg" : "pan_card_signature.jpg";
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Save to history
+    const sizeLabel = currentPancardType === "photo" ? "Pan Card Photo (2.5×3.5 cm)" : "Pan Card Signature (4.5×2 cm)";
+    const tc = document.createElement("canvas");
+    tc.width = 60; tc.height = 60;
+    tc.getContext("2d").drawImage(images[0], 0, 0, 60, 60);
+    const smallThumb = tc.toDataURL("image/jpeg", 0.3);
+    addHistoryEntry(smallThumb, sizeLabel);
+
+  } catch (err) {
+    alert("Download failed: " + err.message);
+    console.error(err);
+  }
+}
+
+/* ════════════════════════════════
    PDF GENERATION
 ════════════════════════════════ */
 function generatePDF() {
@@ -808,14 +995,8 @@ function generatePDF() {
     }
 
     if (ratio === "35x45") {
-      /*
-       * 3.5 x 4.5 cm → placed LANDSCAPE on portrait PDF
-       * Each photo cell: printW = 4.5 cm, printH = 3.5 cm
-       * The source image was cropped at 3.5w × 4.5h aspect → rotate 90° to place landscape
-       * 4 photos per row (4 × 4.5 = 18cm + gaps fits comfortably in 210mm portrait)
-       */
-      const printW = 45; // 4.5 cm in mm
-      const printH = 35; // 3.5 cm in mm
+      const printW = 45;
+      const printH = 35;
       const cols = 4;
 
       let x = margin;
@@ -824,12 +1005,11 @@ function generatePDF() {
       let count = 0;
 
       images.forEach(imgEl => {
-        // Rotate the source image 90° CW so portrait photo prints as landscape
-        const srcW = Math.round(sizes["35x45"].w * MM_TO_PX); // 3.5cm wide
-        const srcH = Math.round(sizes["35x45"].h * MM_TO_PX); // 4.5cm tall
+        const srcW = Math.round(sizes["35x45"].w * MM_TO_PX);
+        const srcH = Math.round(sizes["35x45"].h * MM_TO_PX);
         const rotCanvas = document.createElement("canvas");
-        rotCanvas.width  = srcH; // becomes width after rotation
-        rotCanvas.height = srcW; // becomes height after rotation
+        rotCanvas.width  = srcH;
+        rotCanvas.height = srcW;
         const rotCtx = rotCanvas.getContext("2d");
         rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
         rotCtx.rotate(90 * Math.PI / 180);
@@ -879,11 +1059,6 @@ function generatePDF() {
       });
 
     } else if (ratio === "51x51") {
-      /*
-       * 2 x 2 inch (51 x 51 mm) - PORTRAIT A4
-       * qty=6  -> 3 cols x 2 rows
-       * qty=15 -> 3 cols x 5 rows
-       */
       const pw = sizes["51x51"].w;
       const ph = sizes["51x51"].h;
       const cols = 3;
@@ -912,7 +1087,6 @@ function generatePDF() {
 
     doc.save("passport_photos.pdf");
 
-    // Save thumbnail to history
     let smallThumb = null;
     if (images[0]) {
       const tc = document.createElement("canvas");
