@@ -3,776 +3,1224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Onpoint Services Passport Photo Editor</title>
+<title>Onpoint Services — Passport Photo Editor</title>
 <link rel="icon" type="image/png" href="logo.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
-*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --navy:         #080f1e;
+  --navy-mid:     #0d1f3c;
+  --navy-light:   #162d54;
+  --gold:         #c9a84c;
+  --gold-light:   #e8c96a;
+  --gold-pale:    #f5e8c0;
+  --white:        #ffffff;
+  --text-main:    #dde5f8;
+  --text-muted:   #7a93c0;
+  --text-dim:     #4a608a;
+  --success:      #2ecc82;
+  --danger:       #e05c5c;
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(201,168,76,0.18);
+  --radius-xl:    20px;
+  --radius-lg:    14px;
+  --radius-md:    9px;
+  --radius-sm:    6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(135deg, #004aad, #00c6ff);
-  margin: 0;
-  padding: 30px 30px 60px;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  overflow-x: hidden;
 }
 
-.container {
-  background: white;
-  max-width: 1100px;
-  margin: auto;
-  padding: 30px;
-  border-radius: 14px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+/* Mesh background */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 5% 0%,  rgba(22,45,84,0.95) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 50% at 95% 95%, rgba(201,168,76,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(13,31,60,0.8) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-.header {
-  background: #0b2c6f;
-  color: white;
-  padding: 12px 20px;
-  font-size: 20px;
+/* Dot grid */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: radial-gradient(rgba(201,168,76,0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+
+.page-wrapper {
+  position: relative; z-index: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+/* ── Header ── */
+.site-header {
+  padding: 40px 0 30px;
+  text-align: center;
+  animation: fadeDown 0.65s ease both;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.28);
+  border-radius: 30px;
+  padding: 5px 18px;
+  font-size: 11px;
   font-weight: 600;
-  text-align: center;
-  margin-bottom: 20px;
-  border-radius: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
 }
 
-.info-toggle {
-  background: #1a7f4b;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+.site-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+}
+
+.site-header h1 em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.site-header .tagline {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  margin-top: 10px;
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* ── Top Action Buttons ── */
+.top-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.65s 0.1s ease both;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 40px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 16px;
-  margin-right: 10px;
-  transition: 0.2s;
+  border: 1px solid;
+  transition: all 0.22s ease;
+  letter-spacing: 0.2px;
 }
-.info-toggle:hover { background: #155e38; transform: none; }
 
-#infoPanel {
+.action-btn.gold {
+  background: rgba(201,168,76,0.1);
+  border-color: rgba(201,168,76,0.35);
+  color: var(--gold-light);
+}
+.action-btn.gold:hover {
+  background: rgba(201,168,76,0.2);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(201,168,76,0.18);
+}
+
+.action-btn.slate {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+}
+.action-btn.slate:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+
+/* ── Panels ── */
+.panel {
   display: none;
-  border: 1px solid #e5e5e5;
-  border-radius: 10px;
-  background: #fafafa;
-  padding: 18px;
-  margin-bottom: 20px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(16px);
+  animation: fadeUp 0.3s ease both;
 }
 
-#infoPanel h3 {
-  margin: 0 0 16px;
-  font-size: 16px;
-  color: #0b2c6f;
-  text-align: center;
-  border-bottom: 2px solid #0b2c6f;
-  padding-bottom: 10px;
+.panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  color: var(--gold-light);
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
+/* Rate Grid */
 .rate-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 12px;
   margin-bottom: 20px;
 }
 
 .rate-card {
-  background: white;
-  border: 1px solid #e0e7ff;
-  border-radius: 10px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(201,168,76,0.13);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.rate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px rgba(0,0,0,0.3);
+  border-color: rgba(201,168,76,0.3);
 }
 
 .rate-card-header {
-  background: #0b2c6f;
-  color: white;
-  padding: 8px 14px;
-  font-size: 14px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.08));
+  color: var(--gold-light);
+  padding: 9px 13px;
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid rgba(201,168,76,0.12);
 }
 
-.rate-card table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
+.rate-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 
 .rate-card table th {
-  background: #eef2ff;
-  color: #0b2c6f;
-  padding: 7px 12px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text-dim);
+  padding: 6px 12px;
   text-align: left;
+  font-size: 10.5px;
   font-weight: 600;
-  border-bottom: 1px solid #e0e7ff;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
 .rate-card table td {
   padding: 7px 12px;
-  border-bottom: 1px solid #f0f0f0;
-  color: #333;
+  border-bottom: 1px solid rgba(255,255,255,0.035);
+  color: var(--text-main);
 }
 
 .rate-card table tr:last-child td { border-bottom: none; }
-.rate-card table tr:hover td { background: #f7f9ff; }
+.rate-card table tr:hover td { background: rgba(255,255,255,0.035); }
+.rate-price { color: var(--success); font-weight: 600; }
 
-.rate-price { color: #1a7f4b; font-weight: 600; }
-
+/* Instructions */
 .instructions-box {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 10px;
-  padding: 14px 18px;
+  background: rgba(201,168,76,0.05);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
 }
 
 .instructions-box h4 {
-  margin: 0 0 10px;
-  color: #b45309;
-  font-size: 14px;
+  color: var(--gold);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .instructions-box ol {
-  margin: 0;
   padding-left: 18px;
-  color: #555;
+  color: var(--text-muted);
   font-size: 13px;
-  line-height: 1.9;
+  line-height: 2.1;
 }
 
-.history-toggle {
-  background: #0b2c6f;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 16px;
-  transition: 0.2s;
-}
+.instructions-box ol li::marker { color: var(--gold); }
 
-.history-toggle:hover { background: #0e3a8a; transform: none; }
-
-#historyPanel {
-  display: none;
-  border: 1px solid #e5e5e5;
-  border-radius: 10px;
-  background: #fafafa;
-  padding: 18px;
-  margin-bottom: 20px;
-}
-
-#historyPanel h3 {
-  margin: 0 0 14px;
-  font-size: 15px;
-  color: #0b2c6f;
-}
-
+/* ── History ── */
 .history-empty {
-  color: #aaa;
-  font-size: 14px;
+  color: var(--text-dim);
+  font-size: 13.5px;
   text-align: center;
-  padding: 20px 0;
+  padding: 28px 0;
+  font-style: italic;
 }
 
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 340px;
+  gap: 9px;
+  max-height: 310px;
   overflow-y: auto;
+  padding-right: 4px;
 }
+
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
 
 .history-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: white;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-lg);
+  padding: 11px 14px;
+  transition: border-color 0.2s;
 }
 
+.history-item:hover { border-color: rgba(201,168,76,0.22); }
+
 .history-thumb {
-  width: 54px;
-  height: 54px;
+  width: 48px; height: 48px;
   object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #ddd;
+  border-radius: 8px;
+  border: 1px solid rgba(201,168,76,0.18);
   flex-shrink: 0;
 }
 
 .history-thumb-placeholder {
-  width: 54px;
-  height: 54px;
-  background: #f0f0f0;
-  border-radius: 6px;
-  border: 1px solid #ddd;
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
 .history-meta { flex: 1; }
-.history-meta .h-size { font-weight: 600; font-size: 14px; color: #222; }
-.history-meta .h-date { font-size: 12px; color: #888; margin-top: 2px; }
+.h-size { font-weight: 600; font-size: 13px; color: var(--text-main); }
+.h-date { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
 .history-delete {
-  background: #fee;
-  color: #c0392b;
-  border: 1px solid #f5c6c6;
-  padding: 7px 12px;
-  border-radius: 7px;
-  font-size: 13px;
+  background: rgba(224,92,92,0.09);
+  color: #e05c5c;
+  border: 1px solid rgba(224,92,92,0.22);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background 0.2s;
 }
-
-.history-delete:hover { background: #fdd; transform: none; }
+.history-delete:hover { background: rgba(224,92,92,0.18); transform: none; box-shadow: none; }
 
 .clear-history-btn {
-  margin-top: 12px;
+  margin-top: 14px;
   background: none;
-  color: #c0392b;
-  border: 1px solid #f5c6c6;
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 13px;
+  color: #e05c5c;
+  border: 1px solid rgba(224,92,92,0.22);
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
+  transition: background 0.2s;
 }
+.clear-history-btn:hover { background: rgba(224,92,92,0.1); transform: none; box-shadow: none; }
 
-.clear-history-btn:hover { background: #fee; transform: none; }
-
-#dropZone {
-  border: 2px dashed #2d7ef7;
-  padding: 35px;
-  text-align: center;
-  border-radius: 10px;
-  cursor: pointer;
-  background: #f8fbff;
-  font-size: 16px;
-  color: #555;
+/* ── Step Cards ── */
+.step-card {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-xl);
+  padding: 26px 28px;
+  margin-bottom: 14px;
   position: relative;
-  transition: 0.2s;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  animation: fadeUp 0.5s ease both;
 }
 
-#dropZone p { font-size: 18px; font-weight: 600; margin: 0 0 6px; color: #444; }
-#dropZone span { font-size: 13px; color: #888; }
-#dropZone:hover { background: #eef5ff; border-color: #1b63c7; }
-#dropZone input[type="file"] {
-  position: absolute; width: 100%; height: 100%;
-  top: 0; left: 0; opacity: 0; cursor: pointer;
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(201,168,76,0.35) 50%, transparent 90%);
 }
 
-.step {
-  border: 1px solid #e5e5e5;
-  padding: 18px;
+.step-card:hover {
+  border-color: rgba(201,168,76,0.22);
+  box-shadow: 0 12px 42px rgba(0,0,0,0.28);
+}
+
+.step-card.hidden { display: none !important; }
+
+/* Stagger animations */
+.step-card:nth-child(1) { animation-delay: 0.08s; }
+.step-card:nth-child(2) { animation-delay: 0.14s; }
+.step-card:nth-child(3) { animation-delay: 0.20s; }
+.step-card:nth-child(4) { animation-delay: 0.26s; }
+.step-card:nth-child(5) { animation-delay: 0.32s; }
+.step-card:nth-child(6) { animation-delay: 0.38s; }
+.step-card:nth-child(7) { animation-delay: 0.44s; }
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 20px;
-  border-radius: 10px;
-  background: #fafafa;
-  transition: 0.2s;
 }
 
-.step:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-
-.step.hidden { display: none; }
-
-select {
-  padding: 7px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-button {
-  padding: 9px 16px;
-  border: none;
-  border-radius: 7px;
-  cursor: pointer;
-  background: #2d7ef7;
-  color: white;
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201,168,76,0.28), rgba(201,168,76,0.08));
+  border: 1px solid rgba(201,168,76,0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  font-weight: 500;
-  transition: 0.2s;
+  font-weight: 700;
+  color: var(--gold-light);
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
-button:hover { background: #1b5fd6; transform: translateY(-1px); }
-
-.btn-generate {
-  background: #2dbb63;
-  font-size: 18px;
-  padding: 12px 30px;
+.step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
 }
 
-.btn-generate:hover { background: #239e52; }
+.step-subtitle {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  font-weight: 400;
+}
 
-#preview { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.18), transparent);
+  margin: 0 0 20px;
+}
+
+/* ── Upload Zone ── */
+#dropZone {
+  border: 1.5px dashed rgba(201,168,76,0.3);
+  padding: 44px 24px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  background: rgba(201,168,76,0.025);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+#dropZone:hover {
+  border-color: rgba(201,168,76,0.6);
+  background: rgba(201,168,76,0.055);
+}
+
+.upload-icon { font-size: 38px; display: block; margin-bottom: 12px; }
+
+#dropZone p {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 5px;
+}
+
+#dropZone .sub { font-size: 12.5px; color: var(--text-dim); }
+
+.browse-chip {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 22px;
+  border-radius: 30px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.28);
+  color: var(--gold-light);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+#dropZone:hover .browse-chip {
+  background: rgba(201,168,76,0.18);
+  border-color: var(--gold);
+}
+
+#dropZone input[type="file"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+}
+
+/* Photo Previews */
+#preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 
 .thumb { position: relative; display: inline-block; }
 
 .thumb img {
-  width: 120px;
-  border: 2px solid #ccc;
+  width: 86px; height: 86px;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.08);
   cursor: pointer;
-  border-radius: 8px;
-  transition: 0.2s;
+  border-radius: var(--radius-md);
+  transition: all 0.22s;
+  display: block;
 }
 
-.thumb img:hover { transform: scale(1.05); }
-.thumb img.active { border: 3px solid #2dbb63; }
+.thumb img:hover { transform: scale(1.07); border-color: rgba(201,168,76,0.5); }
+.thumb img.active { border-color: var(--gold); box-shadow: 0 0 16px rgba(201,168,76,0.38); }
 
 .deleteBtn {
-  position: absolute;
-  top: -5px; right: -5px;
-  background: red; color: white;
-  border: none; font-size: 12px;
+  position: absolute; top: -6px; right: -6px;
+  background: var(--danger); color: white;
+  border: none; font-size: 10px; font-weight: 700;
   cursor: pointer; border-radius: 50%;
-  width: 20px; height: 20px;
-  padding: 0; line-height: 20px; text-align: center;
+  width: 20px; height: 20px; padding: 0;
+  line-height: 20px; text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  transition: transform 0.15s;
+  box-shadow: none;
+}
+.deleteBtn:hover { transform: scale(1.18); background: #c0392b; box-shadow: none; }
+
+/* ── Select / Controls ── */
+.control-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 9px;
 }
 
-#cropSection { display: none; margin-top: 15px; text-align: center; }
+select {
+  width: 100%;
+  max-width: 360px;
+  padding: 12px 40px 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.055);
+  color: var(--text-main);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%237a93c0' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+select:focus { border-color: rgba(201,168,76,0.45); }
+select option { background: #0d1f3c; color: var(--text-main); }
+
+/* ── Type Toggle Tabs ── */
+.type-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.type-tab {
+  flex: 1;
+  min-width: 175px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.035);
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.24s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.tab-icon { font-size: 22px; flex-shrink: 0; }
+.tab-name { font-weight: 600; color: var(--text-main); font-size: 14px; display: block; }
+.tab-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; display: block; }
+
+.type-tab.selected {
+  border-color: rgba(201,168,76,0.5);
+  background: rgba(201,168,76,0.09);
+  box-shadow: 0 0 22px rgba(201,168,76,0.1);
+}
+
+.type-tab.selected .tab-name { color: var(--gold-light); }
+.type-tab:hover:not(.selected) { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); }
+
+/* ── PAN Card Options ── */
+.pancard-options { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.pancard-opt { flex: 1; min-width: 190px; position: relative; }
+.pancard-opt input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.pancard-opt label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.035);
+  cursor: pointer;
+  transition: all 0.22s;
+}
+
+.opt-name { font-weight: 600; font-size: 14px; color: var(--text-main); }
+.opt-desc { font-size: 12px; color: var(--text-dim); }
+.opt-badge {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(46,204,130,0.1);
+  border: 1px solid rgba(46,204,130,0.2);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pancard-opt input:checked + label {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+.pancard-opt input:checked + label .opt-name { color: var(--gold-light); }
+.pancard-opt label:hover { border-color: rgba(201,168,76,0.28); }
+
+/* ── Crop ── */
+#cropSection { display: none; margin-top: 22px; text-align: center; }
 
 #cropImage {
-  max-width: 100%; max-height: 420px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  max-width: 100%; max-height: 370px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.55);
 }
 
 #guideLine {
   position: absolute; left: 0; right: 0;
-  height: 2px; background: red; top: 40%;
+  height: 1px; background: rgba(255,70,70,0.65); top: 40%;
   pointer-events: none;
 }
 
-.tools button { margin: 5px; }
-
-.pancard-section {
-  background: #e3f2fd;
-  border: 2px solid #2196f3;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 20px;
+.crop-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+  flex-wrap: wrap;
 }
 
-.pancard-section h3 {
-  margin-top: 0;
-  color: #1565c0;
-}
+/* ── Adjustment Grid ── */
+.adj-grid { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.pancard-option {
-  display: inline-block;
-  margin-right: 20px;
-  margin-bottom: 10px;
-}
-
-.pancard-option input[type="radio"] {
-  margin-right: 8px;
+/* ── Buttons (base reset) ── */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
-}
-
-.pancard-option label {
-  cursor: pointer;
-}
-
-.footer {
-  position: fixed;
-  bottom: 0; left: 0; width: 100%;
-  background: #0b2c6f;
-  color: #fff;
-  text-align: center;
-  padding: 8px;
+  font-family: 'DM Sans', sans-serif;
   font-size: 13px;
+  font-weight: 600;
+  transition: all 0.22s ease;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  padding: 10px 17px;
+  background: rgba(45,126,247,0.15);
+  border: 1px solid rgba(45,126,247,0.28);
+  color: #90beff;
 }
+
+button:hover {
+  background: rgba(45,126,247,0.26);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(45,126,247,0.14);
+}
+
+/* Tool buttons */
+.btn-tool {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  padding: 9px 14px;
+}
+.btn-tool:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-main);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+/* Apply/Cancel */
+.btn-apply {
+  background: rgba(46,204,130,0.14);
+  border: 1px solid rgba(46,204,130,0.32);
+  color: var(--success);
+}
+.btn-apply:hover { background: rgba(46,204,130,0.24); box-shadow: 0 6px 18px rgba(46,204,130,0.16); }
+
+.btn-cancel {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--text-muted);
+}
+.btn-cancel:hover { background: rgba(255,255,255,0.09); box-shadow: none; }
+
+/* CTA buttons */
+.btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 4px; }
+
+.btn-pdf {
+  padding: 14px 28px;
+  font-size: 15px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(45,126,247,0.22), rgba(45,126,247,0.08));
+  border: 1px solid rgba(45,126,247,0.4);
+  color: #a8ccff;
+  position: relative;
+  overflow: hidden;
+}
+.btn-pdf::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.07) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.btn-pdf:hover::after { transform: translateX(100%); }
+.btn-pdf:hover {
+  background: linear-gradient(135deg, rgba(45,126,247,0.36), rgba(45,126,247,0.16));
+  box-shadow: 0 10px 30px rgba(45,126,247,0.22);
+  transform: translateY(-2px);
+}
+
+.btn-jpeg {
+  padding: 14px 28px;
+  font-size: 15px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(201,168,76,0.26), rgba(201,168,76,0.08));
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold-light);
+  position: relative;
+  overflow: hidden;
+}
+.btn-jpeg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.btn-jpeg:hover::after { transform: translateX(100%); }
+.btn-jpeg:hover {
+  background: linear-gradient(135deg, rgba(201,168,76,0.4), rgba(201,168,76,0.16));
+  box-shadow: 0 10px 30px rgba(201,168,76,0.22);
+  transform: translateY(-2px);
+}
+
+/* ── Footer ── */
+.site-footer {
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  background: rgba(8,15,30,0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(201,168,76,0.1);
+  color: var(--text-dim);
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  z-index: 100;
+}
+.site-footer strong { color: var(--gold); font-weight: 600; }
+
+/* ── Animations ── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.18); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.36); }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="page-wrapper">
 
-  <div class="header">Onpoint Services Passport Photo Editor</div>
+  <!-- ══ Header ══ -->
+  <header class="site-header">
+    <div class="brand-badge">✦ Onpoint Services ✦</div>
+    <h1>Passport <em>Photo</em> Editor</h1>
+    <p class="tagline">Professional passport &amp; PAN card photos — cropped, adjusted and print‑ready</p>
+  </header>
 
-  <button class="info-toggle" onclick="toggleInfo()">&#128204; Rate Chart &amp; Instructions</button>
-  <button class="history-toggle" onclick="toggleHistory()">&#128197; View History</button>
+  <!-- ══ Top Actions ══ -->
+  <div class="top-actions">
+    <button class="action-btn gold" onclick="toggleInfo()">📌 Rate Chart &amp; Instructions</button>
+    <button class="action-btn slate" onclick="toggleHistory()">🗂 View History</button>
+  </div>
 
-  <div id="infoPanel">
-    <h3>Onpoint Services &mdash; Passport Photo Rate Chart</h3>
+  <!-- ══ Info Panel ══ -->
+  <div id="infoPanel" class="panel">
+    <div class="panel-title">📋 Rate Chart</div>
     <div class="rate-grid">
-
       <div class="rate-card">
-        <div class="rate-card-header">Size: 3 &times; 3.7 cm</div>
+        <div class="rate-card-header">3 × 3.7 cm</div>
         <table>
           <tr><th>Price</th><th>Copies</th></tr>
-          <tr><td class="rate-price">&#8377; 50</td><td>6 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 80</td><td>12 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 100</td><td>18 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 150</td><td>42 Copies</td></tr>
+          <tr><td class="rate-price">₹ 50</td><td>6</td></tr>
+          <tr><td class="rate-price">₹ 80</td><td>12</td></tr>
+          <tr><td class="rate-price">₹ 100</td><td>18</td></tr>
+          <tr><td class="rate-price">₹ 150</td><td>42</td></tr>
         </table>
       </div>
-
       <div class="rate-card">
-        <div class="rate-card-header">Size: 3.5 &times; 4.5 cm </div>
+        <div class="rate-card-header">3.5 × 4.5 cm</div>
         <table>
           <tr><th>Price</th><th>Copies</th></tr>
-          <tr><td class="rate-price">&#8377; 50</td><td>4 / 8 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 100</td><td>16 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 150</td><td>28 Copies</td></tr>
+          <tr><td class="rate-price">₹ 50</td><td>4 / 8</td></tr>
+          <tr><td class="rate-price">₹ 100</td><td>16</td></tr>
+          <tr><td class="rate-price">₹ 150</td><td>28</td></tr>
         </table>
       </div>
-
       <div class="rate-card">
-        <div class="rate-card-header">Indian Passport (2 &times; 2 inch)</div>
+        <div class="rate-card-header">Indian Passport (2 × 2 inch)</div>
         <table>
           <tr><th>Price</th><th>Copies</th></tr>
-          <tr><td class="rate-price">&#8377; 80</td><td>6 Copies</td></tr>
-          <tr><td class="rate-price">&#8377; 150</td><td>15 Copies</td></tr>
+          <tr><td class="rate-price">₹ 80</td><td>6</td></tr>
+          <tr><td class="rate-price">₹ 150</td><td>15</td></tr>
         </table>
       </div>
-
       <div class="rate-card">
-        <div class="rate-card-header">Pan Card - Photo (2.5 &times; 3.5 cm)</div>
+        <div class="rate-card-header">PAN Card — Photo</div>
         <table>
-          <tr><th>Details</th><th>Value</th></tr>
-          <tr><td>Size</td><td>2.5 &times; 3.5 cm</td></tr>
-          <tr><td>Download Size</td><td>18 KB</td></tr>
+          <tr><th>Detail</th><th>Value</th></tr>
+          <tr><td>Size</td><td>2.5 × 3.5 cm</td></tr>
+          <tr><td>File Size</td><td>≤ 18 KB</td></tr>
           <tr><td>Format</td><td>JPEG</td></tr>
         </table>
       </div>
-
       <div class="rate-card">
-        <div class="rate-card-header">Pan Card - Signature (4.5 &times; 2 cm)</div>
+        <div class="rate-card-header">PAN Card — Signature</div>
         <table>
-          <tr><th>Details</th><th>Value</th></tr>
-          <tr><td>Size</td><td>4.5 &times; 2 cm</td></tr>
-          <tr><td>Download Size</td><td>9 KB</td></tr>
+          <tr><th>Detail</th><th>Value</th></tr>
+          <tr><td>Size</td><td>4.5 × 2 cm</td></tr>
+          <tr><td>File Size</td><td>≤ 9 KB</td></tr>
           <tr><td>Format</td><td>JPEG</td></tr>
         </table>
       </div>
-
     </div>
-
     <div class="instructions-box">
-      <h4>&#128221; How to Use</h4>
+      <h4>📝 How to Use</h4>
       <ol>
-        <li>Upload one or more passport photos using the drag &amp; drop area or click to browse.</li>
-        <li>Select the required photo size from the dropdown.</li>
-        <li>Click <b>Open Crop</b> to crop the photo to the correct aspect ratio. Use Zoom + / - to adjust, then click <b>Apply</b>.</li>
-        <li>Use the <b>Adjustments</b> section to fine-tune brightness, contrast, or background colour.</li>
-        <li>For PDF formats, select the quantity required from the dropdown.</li>
-        <li>Click <b>Generate PDF</b> or <b>Download JPEG</b> — the file will download automatically and a record will be saved in History.</li>
-        <li><b>Note:</b> For 3.5 × 4.5 cm, photos are printed landscape (4.5 cm wide × 3.5 cm tall) on a portrait A4 PDF — 4 photos per row.</li>
-        <li><b>Pan Card Options:</b> Choose between Photo (2.5×3.5 cm) or Signature (4.5×2 cm). These download as single JPEG files with optimized file sizes.</li>
+        <li>Upload one or more photos using the drag &amp; drop area or click to browse.</li>
+        <li>Choose <b>Passport Photos</b> or <b>PAN Card</b>, then pick the required size.</li>
+        <li>Click <b>Open Crop Tool</b> to frame the photo, then click <b>Apply Crop</b>.</li>
+        <li>Use <b>Adjustments</b> to fine-tune brightness, contrast, or background colour.</li>
+        <li>Click <b>Generate PDF</b> for a print-ready sheet, or <b>⬇ Download JPEG</b> for a single file.</li>
+        <li>3.5 × 4.5 cm photos are printed landscape on a portrait A4 — 4 per row.</li>
+        <li>PAN card JPEGs are auto-compressed to meet official size limits (18 KB / 9 KB).</li>
       </ol>
     </div>
   </div>
 
-  <div id="historyPanel">
-    <h3>History</h3>
+  <!-- ══ History Panel ══ -->
+  <div id="historyPanel" class="panel">
+    <div class="panel-title">🗂 History</div>
     <div id="historyList"></div>
   </div>
 
-  <!-- Step 1 -->
-  <div class="step">
-    <b>1. Upload Photos</b><br><br>
+  <!-- ══ STEP 1 — Upload ══ -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Upload Photos</div>
+        <div class="step-subtitle">Drag &amp; drop or click to browse — JPG, PNG, WEBP and more</div>
+      </div>
+    </div>
+    <div class="divider"></div>
     <div id="dropZone">
+      <span class="upload-icon">📷</span>
       <p>Drag &amp; Drop Photo Here</p>
-      <span>or click to upload</span>
+      <span class="sub">or</span>
+      <span class="browse-chip">Browse Files</span>
       <input type="file" id="upload" multiple accept="image/*">
     </div>
     <div id="preview"></div>
   </div>
 
-  <!-- Step 2 -->
-  <div class="step">
-    <b>2. Select Type</b><br><br>
-    <select id="type" onchange="updateTypeUI()">
-      <option value="passport">📕 Passport Photos</option>
-      <option value="pancard">🆔 Pan Card</option>
-    </select>
-  </div>
-
-  <!-- Step 2a: Passport Photo Size -->
-  <div id="passportSizeStep" class="step">
-    <b>2a. Select Size (Passport)</b><br><br>
-    <select id="ratio">
-      <option value="30x37">3 x 3.7 cm</option>
-      <option value="35x45">3.5 x 4.5 cm </option>
-      <option value="51x51">Indian Passport (2 x 2 inch)</option>
-    </select>
-  </div>
-
-  <!-- Step 2b: Pan Card Type -->
-  <div id="pancardTypeStep" class="step hidden">
-    <b>2b. Select Pan Card Type</b><br><br>
-    <div class="pancard-section">
-      <div class="pancard-option">
-        <input type="radio" id="pancardPhoto" name="pancardType" value="photo" checked onchange="updatePancardType()">
-        <label for="pancardPhoto"><b>Photo</b> (2.5 × 3.5 cm) - Download 18 KB JPEG</label>
+  <!-- ══ STEP 2 — Type ══ -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Select Type</div>
+        <div class="step-subtitle">Choose the photo category</div>
       </div>
-      <br>
-      <div class="pancard-option">
+    </div>
+    <div class="divider"></div>
+    <!-- Hidden select to preserve JS logic -->
+    <select id="type" style="display:none" onchange="updateTypeUI()">
+      <option value="passport">Passport Photos</option>
+      <option value="pancard">Pan Card</option>
+    </select>
+    <div class="type-tabs">
+      <button class="type-tab selected" onclick="setType('passport', this)">
+        <span class="tab-icon">📕</span>
+        <span>
+          <span class="tab-name">Passport Photos</span>
+          <span class="tab-desc">3×3.7 · 3.5×4.5 · 2×2 inch</span>
+        </span>
+      </button>
+      <button class="type-tab" onclick="setType('pancard', this)">
+        <span class="tab-icon">🆔</span>
+        <span>
+          <span class="tab-name">PAN Card</span>
+          <span class="tab-desc">Photo or Signature JPEG</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2a — Passport Size ══ -->
+  <div id="passportSizeStep" class="step-card">
+    <div class="step-header">
+      <div class="step-num">2a</div>
+      <div>
+        <div class="step-title">Select Passport Size</div>
+        <div class="step-subtitle">Choose the dimensions for your print</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <label class="control-label">Photo Size</label>
+    <select id="ratio">
+      <option value="30x37">3 × 3.7 cm — Standard Passport</option>
+      <option value="35x45">3.5 × 4.5 cm — Visa / ID</option>
+      <option value="51x51">2 × 2 inch — Indian Passport</option>
+    </select>
+  </div>
+
+  <!-- ══ STEP 2b — PAN Card Type ══ -->
+  <div id="pancardTypeStep" class="step-card hidden">
+    <div class="step-header">
+      <div class="step-num">2b</div>
+      <div>
+        <div class="step-title">PAN Card Type</div>
+        <div class="step-subtitle">Select what you need to download</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="pancard-options">
+      <div class="pancard-opt">
+        <input type="radio" id="pancardPhoto" name="pancardType" value="photo" checked onchange="updatePancardType()">
+        <label for="pancardPhoto">
+          <span class="opt-name">📸 Photo</span>
+          <span class="opt-desc">2.5 × 3.5 cm portrait photo</span>
+          <span class="opt-badge">≤ 18 KB JPEG</span>
+        </label>
+      </div>
+      <div class="pancard-opt">
         <input type="radio" id="pancardSignature" name="pancardType" value="signature" onchange="updatePancardType()">
-        <label for="pancardSignature"><b>Signature</b> (4.5 × 2 cm) - Download 9 KB JPEG</label>
+        <label for="pancardSignature">
+          <span class="opt-name">✍️ Signature</span>
+          <span class="opt-desc">4.5 × 2 cm signature scan</span>
+          <span class="opt-badge">≤ 9 KB JPEG</span>
+        </label>
       </div>
     </div>
   </div>
 
-  <!-- Step 3 -->
-  <div class="step">
-    <b>3. Crop Photo</b><br><br>
-    <button onclick="openCrop()">Open Crop</button>
+  <!-- ══ STEP 3 — Crop ══ -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Crop Photo</div>
+        <div class="step-subtitle">Frame the photo to the correct aspect ratio</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <button onclick="openCrop()">✂️ Open Crop Tool</button>
     <div id="cropSection">
       <img id="cropImage" alt="Photo to crop">
       <div id="guideLine"></div>
-      <br><br>
-      <button onclick="zoomIn()">Zoom +</button>
-      <button onclick="zoomOut()">Zoom -</button>
-      <br><br>
-      <button onclick="applyCrop()">Apply</button>
-      <button onclick="closeCrop()">Cancel</button>
+      <div class="crop-actions">
+        <button class="btn-tool" onclick="zoomIn()">🔍 Zoom +</button>
+        <button class="btn-tool" onclick="zoomOut()">🔍 Zoom −</button>
+        <button class="btn-apply" onclick="applyCrop()">✓ Apply Crop</button>
+        <button class="btn-cancel" onclick="closeCrop()">✕ Cancel</button>
+      </div>
     </div>
   </div>
 
-  <!-- Step 4 -->
-  <div class="step">
-    <b>4. Adjustments</b><br><br>
-    <div class="tools">
-      <button onclick="brightness(20)">Brightness +</button>
-      <button onclick="brightness(-20)">Brightness -</button>
-      <button onclick="contrast(20)">Contrast +</button>
-      <button onclick="contrast(-20)">Contrast -</button>
-      <button onclick="setBG('white')">White BG</button>
-      <button onclick="setBG('blue')">Blue BG</button>
-      <button onclick="resetImage()">Reset</button>
+  <!-- ══ STEP 4 — Adjustments ══ -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Adjustments</div>
+        <div class="step-subtitle">Fine-tune brightness, contrast &amp; background</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="adj-grid">
+      <button class="btn-tool" onclick="brightness(20)">☀️ Brighter</button>
+      <button class="btn-tool" onclick="brightness(-20)">🌑 Darker</button>
+      <button class="btn-tool" onclick="contrast(20)">⬆ Contrast +</button>
+      <button class="btn-tool" onclick="contrast(-20)">⬇ Contrast −</button>
+      <button class="btn-tool" onclick="setBG('white')">⬜ White BG</button>
+      <button class="btn-tool" onclick="setBG('blue')">🟦 Blue BG</button>
+      <button class="btn-tool" onclick="resetImage()">↺ Reset</button>
     </div>
   </div>
 
-  <!-- Step 5: Quantity (for PDF) -->
-  <div id="quantityStep" class="step">
-    <b>5. Quantity</b><br><br>
-    <select id="qty"></select>
-    <br><br>
-    <button class="btn-generate" onclick="generatePDF()">Generate PDF</button>
+  <!-- ══ STEP 5 — Passport Quantity + Download ══ -->
+  <div id="quantityStep" class="step-card">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Quantity &amp; Download</div>
+        <div class="step-subtitle">Choose copies for PDF, or download a single JPEG</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <label class="control-label">Number of Copies (PDF)</label>
+    <select id="qty" style="margin-bottom:22px;"></select>
+    <div class="btn-row">
+      <button class="btn-pdf" onclick="generatePDF()">📄 Generate PDF</button>
+      <button class="btn-jpeg" onclick="downloadJPEG()">⬇ Download JPEG</button>
+    </div>
   </div>
 
-  <!-- Step 5: Download (for Pan Card) -->
-  <div id="downloadStep" class="step hidden">
-    <b>5. Download</b><br><br>
-    <button class="btn-generate" onclick="downloadPancardJPEG()">Download JPEG</button>
+  <!-- ══ STEP 5 — PAN Card Download ══ -->
+  <div id="downloadStep" class="step-card hidden">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Download</div>
+        <div class="step-subtitle">Save the optimized JPEG file</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="btn-row">
+      <button class="btn-jpeg" onclick="downloadPancardJPEG()">⬇ Download JPEG</button>
+    </div>
   </div>
 
-</div>
+</div><!-- /page-wrapper -->
 
-<div class="footer">
-  Onpoint Services &bull; Developed by Saurabh Ajinath Kharat &bull; &copy; 2026
-</div>
+<footer class="site-footer">
+  Onpoint Services &nbsp;•&nbsp; Developed by <strong>Saurabh Ajinath Kharat</strong> &nbsp;•&nbsp; © 2026
+</footer>
 
 <script>
 const { jsPDF } = window.jspdf;
 
-/* ════════════════════════════════
-   HISTORY
-════════════════════════════════ */
-function getHistory() {
-  return JSON.parse(localStorage.getItem("op_history") || "[]");
-}
+/* ════════ HISTORY ════════ */
+function getHistory() { return JSON.parse(localStorage.getItem("op_history") || "[]"); }
+function saveHistory(h) { localStorage.setItem("op_history", JSON.stringify(h)); }
 
-function saveHistory(history) {
-  localStorage.setItem("op_history", JSON.stringify(history));
-}
-
-function addHistoryEntry(thumbDataUrl, size) {
-  const history = getHistory();
-  history.unshift({
-    id: Date.now(),
-    thumb: thumbDataUrl,
-    size: size,
-    date: new Date().toLocaleString()
-  });
-  try {
-    saveHistory(history);
-  } catch(e) {
-    while (history.length > 1) {
-      history.pop();
-      try { saveHistory(history); break; } catch(e2) { continue; }
-    }
+function addHistoryEntry(thumb, size) {
+  const h = getHistory();
+  h.unshift({ id: Date.now(), thumb, size, date: new Date().toLocaleString() });
+  try { saveHistory(h); } catch(e) {
+    while (h.length > 1) { h.pop(); try { saveHistory(h); break; } catch(e2) {} }
   }
   renderHistory();
 }
 
-function deleteHistoryEntry(id) {
-  saveHistory(getHistory().filter(h => h.id !== id));
-  renderHistory();
-}
+function deleteHistoryEntry(id) { saveHistory(getHistory().filter(h => h.id !== id)); renderHistory(); }
 
 function clearHistory() {
   if (!confirm("Clear all history? This cannot be undone.")) return;
-  saveHistory([]);
-  renderHistory();
+  saveHistory([]); renderHistory();
 }
 
 function toggleInfo() {
-  const panel = document.getElementById("infoPanel");
-  panel.style.display = panel.style.display === "none" ? "block" : "none";
+  const p = document.getElementById("infoPanel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
 function toggleHistory() {
-  const panel = document.getElementById("historyPanel");
-  panel.style.display = panel.style.display === "none" ? "block" : "none";
+  const p = document.getElementById("historyPanel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
 function renderHistory() {
   const history = getHistory();
   const container = document.getElementById("historyList");
   container.innerHTML = "";
-
-  if (history.length === 0) {
+  if (!history.length) {
     container.innerHTML = '<div class="history-empty">No history yet. Generate a PDF or download to save it here.</div>';
     return;
   }
-
   const list = document.createElement("div");
   list.className = "history-list";
-
   history.forEach(entry => {
     const item = document.createElement("div");
     item.className = "history-item";
-
     if (entry.thumb) {
       const img = document.createElement("img");
-      img.src = entry.thumb;
-      img.className = "history-thumb";
-      img.alt = "Thumbnail";
+      img.src = entry.thumb; img.className = "history-thumb"; img.alt = "Thumb";
       item.appendChild(img);
     } else {
       const ph = document.createElement("div");
-      ph.className = "history-thumb-placeholder";
-      ph.textContent = "📷";
+      ph.className = "history-thumb-placeholder"; ph.textContent = "📷";
       item.appendChild(ph);
     }
-
     const meta = document.createElement("div");
     meta.className = "history-meta";
-    meta.innerHTML = `<div class="h-size">Size: ${entry.size}</div><div class="h-date">${entry.date}</div>`;
+    meta.innerHTML = `<div class="h-size">${entry.size}</div><div class="h-date">${entry.date}</div>`;
     item.appendChild(meta);
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "history-delete";
-    delBtn.textContent = "Delete";
-    delBtn.onclick = () => deleteHistoryEntry(entry.id);
-    item.appendChild(delBtn);
-
+    const del = document.createElement("button");
+    del.className = "history-delete"; del.textContent = "Delete";
+    del.onclick = () => deleteHistoryEntry(entry.id);
+    item.appendChild(del);
     list.appendChild(item);
   });
-
   container.appendChild(list);
-
-  const clearBtn = document.createElement("button");
-  clearBtn.className = "clear-history-btn";
-  clearBtn.textContent = "Clear All History";
-  clearBtn.onclick = clearHistory;
-  container.appendChild(clearBtn);
+  const clr = document.createElement("button");
+  clr.className = "clear-history-btn"; clr.textContent = "Clear All History";
+  clr.onclick = clearHistory;
+  container.appendChild(clr);
 }
 
 renderHistory();
 
-/* ════════════════════════════════
-   PHOTO EDITOR
-════════════════════════════════ */
-let images = [];
-let currentIndex = 0;
-let cropper;
-let currentType = "passport"; // "passport" or "pancard"
-let currentPancardType = "photo"; // "photo" or "signature"
+/* ════════ EDITOR STATE ════════ */
+let images = [], currentIndex = 0, cropper;
+let currentType = "passport", currentPancardType = "photo";
 
 let canvas = document.createElement("canvas");
 let ctx = canvas.getContext("2d");
 let originalImg = new Image();
 
 const sizes = {
-  "30x37": { w: 30, h: 37 },
-  "35x45": { w: 35, h: 45 },
-  "51x51": { w: 51, h: 51 },
-  "pancard_photo": { w: 25, h: 35 },
+  "30x37":             { w: 30, h: 37 },
+  "35x45":             { w: 35, h: 45 },
+  "51x51":             { w: 51, h: 51 },
+  "pancard_photo":     { w: 25, h: 35 },
   "pancard_signature": { w: 45, h: 20 }
-};
-
-const pdfSizes = {
-  "30x37": { w: 30, h: 37 },
-  "35x45": { w: 45, h: 35 },
-  "51x51": { w: 51, h: 51 }
 };
 
 const MM_TO_PX = 300 / 25.4;
 
+/* ── Type Tab UI ── */
+function setType(type, el) {
+  document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('type').value = type;
+  updateTypeUI();
+}
+
 function updateTypeUI() {
-  const type = document.getElementById("type").value;
-  currentType = type;
-  
-  const passportStep = document.getElementById("passportSizeStep");
-  const pancardStep = document.getElementById("pancardTypeStep");
-  const quantityStep = document.getElementById("quantityStep");
-  const downloadStep = document.getElementById("downloadStep");
-  
-  if (type === "passport") {
-    passportStep.classList.remove("hidden");
-    pancardStep.classList.add("hidden");
-    quantityStep.classList.remove("hidden");
-    downloadStep.classList.add("hidden");
+  currentType = document.getElementById("type").value;
+  const pass = document.getElementById("passportSizeStep");
+  const pan  = document.getElementById("pancardTypeStep");
+  const qty  = document.getElementById("quantityStep");
+  const dl   = document.getElementById("downloadStep");
+  if (currentType === "passport") {
+    pass.classList.remove("hidden"); pan.classList.add("hidden");
+    qty.classList.remove("hidden");  dl.classList.add("hidden");
     updateQty();
   } else {
-    passportStep.classList.add("hidden");
-    pancardStep.classList.remove("hidden");
-    quantityStep.classList.add("hidden");
-    downloadStep.classList.remove("hidden");
+    pass.classList.add("hidden");  pan.classList.remove("hidden");
+    qty.classList.add("hidden");   dl.classList.remove("hidden");
     updatePancardType();
   }
 }
 
 function updatePancardType() {
-  const selected = document.querySelector('input[name="pancardType"]:checked').value;
-  currentPancardType = selected;
+  currentPancardType = document.querySelector('input[name="pancardType"]:checked').value;
 }
 
 function updateQty() {
   const r = document.getElementById("ratio").value;
   const q = document.getElementById("qty");
   q.innerHTML = "";
-  let options;
-  if (r === "30x37")      options = [6, 12, 18, 42];
-  else if (r === "35x45") options = [4, 8, 16, 28];
-  else if (r === "51x51") options = [6, 15];
-  options.forEach(v => {
-    const o = document.createElement("option");
-    o.value = v; o.text = v + " photos";
-    q.appendChild(o);
-  });
+  const opts = r==="30x37"?[6,12,18,42]:r==="35x45"?[4,8,16,28]:[6,15];
+  opts.forEach(v => { const o=document.createElement("option"); o.value=v; o.text=v+" photos"; q.appendChild(o); });
 }
 
 document.getElementById("ratio").onchange = updateQty;
 updateQty();
 updateTypeUI();
 
-/* Drag & drop */
+/* ── Drag & Drop ── */
 const dropZone = document.getElementById("dropZone");
 const fileInput = document.getElementById("upload");
 
 dropZone.addEventListener("dragover", e => {
   e.preventDefault();
-  dropZone.style.background = "#e8f2ff";
+  dropZone.style.borderColor = "rgba(201,168,76,0.65)";
+  dropZone.style.background = "rgba(201,168,76,0.07)";
 });
 dropZone.addEventListener("dragleave", () => {
-  dropZone.style.background = "#f8fbff";
+  dropZone.style.borderColor = "rgba(201,168,76,0.3)";
+  dropZone.style.background = "rgba(201,168,76,0.025)";
 });
 dropZone.addEventListener("drop", e => {
   e.preventDefault();
   fileInput.files = e.dataTransfer.files;
   fileInput.dispatchEvent(new Event("change"));
-  dropZone.style.background = "#f8fbff";
+  dropZone.style.borderColor = "rgba(201,168,76,0.3)";
+  dropZone.style.background = "rgba(201,168,76,0.025)";
 });
 
-/* Upload */
+/* ── Upload ── */
 fileInput.onchange = function(e) {
   images = [];
   const preview = document.getElementById("preview");
@@ -788,32 +1236,18 @@ fileInput.onchange = function(e) {
           const wrapper = document.createElement("div");
           wrapper.className = "thumb";
           const thumb = document.createElement("img");
-          thumb.src = img.src;
-          thumb.alt = "Uploaded photo " + (index + 1);
+          thumb.src = img.src; thumb.alt = "Photo " + (index+1);
           thumb.onclick = function() {
-            currentIndex = index;
-            originalImg = images[index];
+            currentIndex = index; originalImg = images[index];
             document.querySelectorAll("#preview img").forEach(x => x.classList.remove("active"));
-            thumb.classList.add("active");
-            drawCanvas();
+            thumb.classList.add("active"); drawCanvas();
           };
           const del = document.createElement("button");
-          del.innerText = "X";
-          del.className = "deleteBtn";
+          del.innerText = "✕"; del.className = "deleteBtn";
           del.setAttribute("aria-label", "Delete photo");
-          del.onclick = function(ev) {
-            ev.stopPropagation();
-            images.splice(index, 1);
-            wrapper.remove();
-          };
-          wrapper.appendChild(thumb);
-          wrapper.appendChild(del);
-          preview.appendChild(wrapper);
-          if (index === 0) {
-            originalImg = img;
-            thumb.classList.add("active");
-            drawCanvas();
-          }
+          del.onclick = function(ev) { ev.stopPropagation(); images.splice(index,1); wrapper.remove(); };
+          wrapper.appendChild(thumb); wrapper.appendChild(del); preview.appendChild(wrapper);
+          if (index===0) { originalImg=img; thumb.classList.add("active"); drawCanvas(); }
         };
         img.src = ev.target.result;
       };
@@ -824,58 +1258,42 @@ fileInput.onchange = function(e) {
 
 function drawCanvas() {
   let w, h;
-  
   if (currentType === "passport") {
     const r = document.getElementById("ratio").value;
-    w = sizes[r].w;
-    h = sizes[r].h;
+    w = sizes[r].w; h = sizes[r].h;
   } else {
-    if (currentPancardType === "photo") {
-      w = sizes["pancard_photo"].w;
-      h = sizes["pancard_photo"].h;
-    } else {
-      w = sizes["pancard_signature"].w;
-      h = sizes["pancard_signature"].h;
-    }
+    const k = currentPancardType==="photo" ? "pancard_photo" : "pancard_signature";
+    w = sizes[k].w; h = sizes[k].h;
   }
-  
-  canvas.width  = w * MM_TO_PX;
-  canvas.height = h * MM_TO_PX;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+  canvas.width = w*MM_TO_PX; canvas.height = h*MM_TO_PX;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(originalImg,0,0,canvas.width,canvas.height);
 }
 
 function openCrop() {
   document.getElementById("cropSection").style.display = "block";
   const img = document.getElementById("cropImage");
   img.src = originalImg.src;
-  
   let aspect;
-  if (currentType === "passport") {
+  if (currentType==="passport") {
     const r = document.getElementById("ratio").value;
-    aspect = sizes[r].w / sizes[r].h;
+    aspect = sizes[r].w/sizes[r].h;
   } else {
-    if (currentPancardType === "photo") {
-      aspect = sizes["pancard_photo"].w / sizes["pancard_photo"].h;
-    } else {
-      aspect = sizes["pancard_signature"].w / sizes["pancard_signature"].h;
-    }
+    const k = currentPancardType==="photo" ? "pancard_photo" : "pancard_signature";
+    aspect = sizes[k].w/sizes[k].h;
   }
-  
   if (cropper) cropper.destroy();
   cropper = new Cropper(img, { aspectRatio: aspect, viewMode: 1 });
 }
 
-function zoomIn()  { cropper.zoom(0.1);  }
+function zoomIn()  { cropper.zoom(0.1); }
 function zoomOut() { cropper.zoom(-0.1); }
 
 function applyCrop() {
   const cropped = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
   const data = cropped.toDataURL();
-  images[currentIndex].src = data;
-  originalImg.src = data;
-  drawCanvas();
-  closeCrop();
+  images[currentIndex].src = data; originalImg.src = data;
+  drawCanvas(); closeCrop();
 }
 
 function closeCrop() {
@@ -884,223 +1302,122 @@ function closeCrop() {
 }
 
 function brightness(v) {
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    d[i]   = Math.min(255, Math.max(0, d[i]   + v));
-    d[i+1] = Math.min(255, Math.max(0, d[i+1] + v));
-    d[i+2] = Math.min(255, Math.max(0, d[i+2] + v));
-  }
-  ctx.putImageData(img, 0, 0);
-  images[currentIndex].src = canvas.toDataURL();
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height); const d = img.data;
+  for (let i=0;i<d.length;i+=4) { d[i]=Math.min(255,Math.max(0,d[i]+v)); d[i+1]=Math.min(255,Math.max(0,d[i+1]+v)); d[i+2]=Math.min(255,Math.max(0,d[i+2]+v)); }
+  ctx.putImageData(img,0,0); images[currentIndex].src = canvas.toDataURL();
 }
 
 function contrast(v) {
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = img.data;
-  const f = (259 * (v + 255)) / (255 * (259 - v));
-  for (let i = 0; i < d.length; i += 4) {
-    d[i]   = Math.min(255, Math.max(0, f * (d[i]   - 128) + 128));
-    d[i+1] = Math.min(255, Math.max(0, f * (d[i+1] - 128) + 128));
-    d[i+2] = Math.min(255, Math.max(0, f * (d[i+2] - 128) + 128));
-  }
-  ctx.putImageData(img, 0, 0);
-  images[currentIndex].src = canvas.toDataURL();
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height); const d = img.data;
+  const f = (259*(v+255))/(255*(259-v));
+  for (let i=0;i<d.length;i+=4) { d[i]=Math.min(255,Math.max(0,f*(d[i]-128)+128)); d[i+1]=Math.min(255,Math.max(0,f*(d[i+1]-128)+128)); d[i+2]=Math.min(255,Math.max(0,f*(d[i+2]-128)+128)); }
+  ctx.putImageData(img,0,0); images[currentIndex].src = canvas.toDataURL();
 }
 
 function setBG(color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+  ctx.fillStyle=color; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(originalImg,0,0,canvas.width,canvas.height);
   images[currentIndex].src = canvas.toDataURL();
 }
 
 function resetImage() { drawCanvas(); }
 
-/* ════════════════════════════════
-   PANCARD JPEG DOWNLOAD
-════════════════════════════════ */
-function downloadPancardJPEG() {
-  if (images.length === 0) {
-    alert("Please upload at least one photo first.");
-    return;
-  }
-
+/* ════════ JPEG — Passport ════════ */
+function downloadJPEG() {
+  if (!images.length) { alert("Please upload at least one photo first."); return; }
   try {
-    const targetSize = currentPancardType === "photo" ? 18000 : 9000; // 18 KB or 9 KB in bytes
-    let quality = 0.85;
-    let jpegData;
-    
-    // Iteratively reduce quality to meet target file size
-    while (quality > 0.1) {
-      jpegData = canvas.toDataURL("image/jpeg", quality);
-      const sizeInBytes = Math.ceil((jpegData.length - 'data:image/jpeg;base64,'.length) * 0.75);
-      
-      if (sizeInBytes <= targetSize) {
-        break;
-      }
-      quality -= 0.05;
-    }
-
-    // Create download link
-    const link = document.createElement("a");
-    link.href = jpegData;
-    const fileName = currentPancardType === "photo" ? "pan_card_photo.jpg" : "pan_card_signature.jpg";
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Save to history
-    const sizeLabel = currentPancardType === "photo" ? "Pan Card Photo (2.5×3.5 cm)" : "Pan Card Signature (4.5×2 cm)";
-    const tc = document.createElement("canvas");
-    tc.width = 60; tc.height = 60;
-    tc.getContext("2d").drawImage(images[0], 0, 0, 60, 60);
-    const smallThumb = tc.toDataURL("image/jpeg", 0.3);
-    addHistoryEntry(smallThumb, sizeLabel);
-
-  } catch (err) {
-    alert("Download failed: " + err.message);
-    console.error(err);
-  }
+    const r = document.getElementById("ratio").value;
+    const names  = { "30x37":"passport_3x3.7cm.jpg",  "35x45":"passport_3.5x4.5cm.jpg", "51x51":"passport_2x2inch.jpg" };
+    const labels = { "30x37":"3 × 3.7 cm (JPEG)",     "35x45":"3.5 × 4.5 cm (JPEG)",    "51x51":"Indian Passport 2×2 inch (JPEG)" };
+    const data = canvas.toDataURL("image/jpeg", 0.95);
+    const a = document.createElement("a"); a.href=data; a.download=names[r]||"passport.jpg";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const tc=document.createElement("canvas"); tc.width=60; tc.height=60;
+    tc.getContext("2d").drawImage(images[currentIndex],0,0,60,60);
+    addHistoryEntry(tc.toDataURL("image/jpeg",0.3), labels[r]||r);
+  } catch(err) { alert("JPEG download failed: "+err.message); }
 }
 
-/* ════════════════════════════════
-   PDF GENERATION
-════════════════════════════════ */
-function generatePDF() {
-  if (images.length === 0) {
-    alert("Please upload at least one photo first.");
-    return;
-  }
+/* ════════ JPEG — PAN Card ════════ */
+function downloadPancardJPEG() {
+  if (!images.length) { alert("Please upload at least one photo first."); return; }
+  try {
+    const target = currentPancardType==="photo" ? 18000 : 9000;
+    let q=0.85, data;
+    while (q>0.1) {
+      data = canvas.toDataURL("image/jpeg",q);
+      if (Math.ceil((data.length-'data:image/jpeg;base64,'.length)*0.75)<=target) break;
+      q-=0.05;
+    }
+    const a=document.createElement("a"); a.href=data;
+    a.download = currentPancardType==="photo"?"pan_card_photo.jpg":"pan_card_signature.jpg";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const label = currentPancardType==="photo"?"Pan Card Photo (2.5×3.5 cm)":"Pan Card Signature (4.5×2 cm)";
+    const tc=document.createElement("canvas"); tc.width=60; tc.height=60;
+    tc.getContext("2d").drawImage(images[0],0,0,60,60);
+    addHistoryEntry(tc.toDataURL("image/jpeg",0.3), label);
+  } catch(err) { alert("Download failed: "+err.message); }
+}
 
+/* ════════ PDF Generation ════════ */
+function generatePDF() {
+  if (!images.length) { alert("Please upload at least one photo first."); return; }
   try {
     const ratio = document.getElementById("ratio").value;
     const qty   = parseInt(document.getElementById("qty").value);
+    const doc   = new jsPDF("p","mm","a4");
+    const W=210, H=297, margin=5, gap=4;
 
-    // Always portrait A4 PDF
-    const doc = new jsPDF("p", "mm", "a4");
-    const pageWidth  = 210;
-    const pageHeight = 297;
-    const margin = 5;
-    const gap = 4;
-
-    // Helper: get clean JPEG dataURL
-    function getImgData(imgEl, canvasW, canvasH) {
-      const tc = document.createElement("canvas");
-      tc.width  = Math.round(canvasW);
-      tc.height = Math.round(canvasH);
-      tc.getContext("2d").drawImage(imgEl, 0, 0, tc.width, tc.height);
-      return tc.toDataURL("image/jpeg", 1);
+    function imgData(el, cw, ch) {
+      const tc=document.createElement("canvas"); tc.width=Math.round(cw); tc.height=Math.round(ch);
+      tc.getContext("2d").drawImage(el,0,0,tc.width,tc.height);
+      return tc.toDataURL("image/jpeg",1);
     }
 
-    if (ratio === "35x45") {
-      const printW = 45;
-      const printH = 35;
-      const cols = 4;
-
-      let x = margin;
-      let y = margin;
-      let colCount = 0;
-      let count = 0;
-
-      images.forEach(imgEl => {
-        const srcW = Math.round(sizes["35x45"].w * MM_TO_PX);
-        const srcH = Math.round(sizes["35x45"].h * MM_TO_PX);
-        const rotCanvas = document.createElement("canvas");
-        rotCanvas.width  = srcH;
-        rotCanvas.height = srcW;
-        const rotCtx = rotCanvas.getContext("2d");
-        rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
-        rotCtx.rotate(90 * Math.PI / 180);
-        rotCtx.drawImage(imgEl, -srcW / 2, -srcH / 2, srcW, srcH);
-        const imgData = rotCanvas.toDataURL("image/jpeg", 1);
-
-        for (let i = 0; i < qty; i++) {
-          doc.addImage(imgData, "JPEG", x, y, printW, printH);
-          doc.setLineWidth(0.25);
-          doc.setDrawColor(0);
-          doc.rect(x, y, printW, printH);
-
-          colCount++;
-          count++;
-
-          if (colCount >= cols) {
-            colCount = 0;
-            x = margin;
-            y += printH + gap;
-          } else {
-            x += printW + gap;
-          }
-
-          if (y + printH > pageHeight) {
-            doc.addPage();
-            x = margin; y = margin; colCount = 0;
-          }
+    if (ratio==="35x45") {
+      const pW=45,pH=35,cols=4; let x=margin,y=margin,col=0;
+      images.forEach(el => {
+        const sw=Math.round(sizes["35x45"].w*MM_TO_PX), sh=Math.round(sizes["35x45"].h*MM_TO_PX);
+        const rc=document.createElement("canvas"); rc.width=sh; rc.height=sw;
+        const rx=rc.getContext("2d"); rx.translate(rc.width/2,rc.height/2); rx.rotate(Math.PI/2);
+        rx.drawImage(el,-sw/2,-sh/2,sw,sh);
+        const d=rc.toDataURL("image/jpeg",1);
+        for (let i=0;i<qty;i++) {
+          doc.addImage(d,"JPEG",x,y,pW,pH);
+          doc.setLineWidth(0.25); doc.setDrawColor(0); doc.rect(x,y,pW,pH);
+          col++; if(col>=cols){col=0;x=margin;y+=pH+gap;}else{x+=pW+gap;}
+          if(y+pH>H){doc.addPage();x=margin;y=margin;col=0;}
         }
       });
-
-    } else if (ratio === "30x37") {
-      const pw = sizes["30x37"].w;
-      const ph = sizes["30x37"].h;
-      let x = margin, y = margin;
-
-      images.forEach(imgEl => {
-        const imgData = getImgData(imgEl, pw * MM_TO_PX, ph * MM_TO_PX);
-        for (let i = 0; i < qty; i++) {
-          doc.addImage(imgData, "JPEG", x, y, pw, ph);
-          doc.setLineWidth(0.25);
-          doc.setDrawColor(0);
-          doc.rect(x, y, pw, ph);
-          x += pw + gap;
-          if (x + pw > pageWidth) { x = margin; y += ph + gap; }
-          if (y + ph > pageHeight) { doc.addPage(); x = margin; y = margin; }
+    } else if (ratio==="30x37") {
+      const pw=sizes["30x37"].w,ph=sizes["30x37"].h; let x=margin,y=margin;
+      images.forEach(el=>{
+        const d=imgData(el,pw*MM_TO_PX,ph*MM_TO_PX);
+        for(let i=0;i<qty;i++){
+          doc.addImage(d,"JPEG",x,y,pw,ph);
+          doc.setLineWidth(0.25);doc.setDrawColor(0);doc.rect(x,y,pw,ph);
+          x+=pw+gap; if(x+pw>W){x=margin;y+=ph+gap;} if(y+ph>H){doc.addPage();x=margin;y=margin;}
         }
       });
-
-    } else if (ratio === "51x51") {
-      const pw = sizes["51x51"].w;
-      const ph = sizes["51x51"].h;
-      const cols = 3;
-      let x = margin, y = margin, colCount = 0;
-
-      images.forEach(imgEl => {
-        const imgData = getImgData(imgEl, pw * MM_TO_PX, ph * MM_TO_PX);
-        for (let i = 0; i < qty; i++) {
-          doc.addImage(imgData, "JPEG", x, y, pw, ph);
-          doc.setLineWidth(0.25);
-          doc.setDrawColor(0);
-          doc.rect(x, y, pw, ph);
-          colCount++;
-          if (colCount >= cols) { colCount = 0; x = margin; y += ph + gap; }
-          else { x += pw + gap; }
-          if (y + ph > pageHeight) { doc.addPage(); x = margin; y = margin; colCount = 0; }
+    } else if (ratio==="51x51") {
+      const pw=sizes["51x51"].w,ph=sizes["51x51"].h,cols=3; let x=margin,y=margin,col=0;
+      images.forEach(el=>{
+        const d=imgData(el,pw*MM_TO_PX,ph*MM_TO_PX);
+        for(let i=0;i<qty;i++){
+          doc.addImage(d,"JPEG",x,y,pw,ph);
+          doc.setLineWidth(0.25);doc.setDrawColor(0);doc.rect(x,y,pw,ph);
+          col++; if(col>=cols){col=0;x=margin;y+=ph+gap;}else{x+=pw+gap;}
+          if(y+ph>H){doc.addPage();x=margin;y=margin;col=0;}
         }
       });
     }
 
-    const sizeLabels = {
-      "30x37": "3 × 3.7 cm",
-      "35x45": "3.5 × 4.5 cm (Landscape)",
-      "51x51": "Indian Passport (2 × 2 inch)"
-    };
-
+    const labels={"30x37":"3 × 3.7 cm","35x45":"3.5 × 4.5 cm (Landscape)","51x51":"Indian Passport (2 × 2 inch)"};
     doc.save("passport_photos.pdf");
-
-    let smallThumb = null;
-    if (images[0]) {
-      const tc = document.createElement("canvas");
-      tc.width = 60; tc.height = 60;
-      tc.getContext("2d").drawImage(images[0], 0, 0, 60, 60);
-      smallThumb = tc.toDataURL("image/jpeg", 0.3);
-    }
-
-    addHistoryEntry(smallThumb, sizeLabels[ratio]);
-
-  } catch (err) {
-    alert("PDF generation failed: " + err.message);
-    console.error(err);
-  }
+    const tc=document.createElement("canvas"); tc.width=60; tc.height=60;
+    if(images[0]) tc.getContext("2d").drawImage(images[0],0,0,60,60);
+    addHistoryEntry(images[0]?tc.toDataURL("image/jpeg",0.3):null, labels[ratio]);
+  } catch(err) { alert("PDF generation failed: "+err.message); }
 }
 </script>
 </body>
