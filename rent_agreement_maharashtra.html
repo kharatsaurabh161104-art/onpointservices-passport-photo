@@ -198,6 +198,35 @@ body{
 .mcard li{margin-bottom:5px}
 .mcard strong{color:#1a1a2e}
 
+/* ── History Item ── */
+.history-item{
+  background:#f8f9fa;border:1px solid #ddd;border-radius:8px;
+  padding:14px;margin-bottom:10px;display:flex;
+  justify-content:space-between;align-items:center;
+  transition:background 0.2s;
+}
+.history-item:hover{background:#e3f2fd}
+.history-text{display:flex;flex-direction:column;gap:4px;flex:1}
+.history-text .owner{font-size:13px;font-weight:700;color:#1565c0}
+.history-text .tenant{font-size:12px;color:#666}
+.history-text .timestamp{font-size:10px;color:#999;margin-top:4px}
+.history-btns{display:flex;gap:8px}
+.history-btns button{
+  padding:6px 12px;font-size:11px;font-weight:600;border:none;
+  border-radius:4px;cursor:pointer;transition:background 0.2s;
+}
+.btn-load{
+  background:#2e7d32;color:#fff;
+}
+.btn-load:hover{background:#1b5e20}
+.btn-delete{
+  background:#c62828;color:#fff;
+}
+.btn-delete:hover{background:#b71c1c}
+.history-empty{
+  text-align:center;padding:20px;color:#999;font-size:13px;
+}
+
 /* ── Footer ── */
 .footer {
   position: fixed;
@@ -213,6 +242,9 @@ body{
   .g2,.g3{grid-template-columns:1fr}
   body{padding:16px 8px 0}
   .site-header h1{font-size:16px}
+  .history-item{flex-direction:column;align-items:flex-start}
+  .history-btns{width:100%;margin-top:10px}
+  .history-btns button{flex:1}
 }
 </style>
 </head>
@@ -233,6 +265,9 @@ body{
     </button>
     <button class="btn-blue-outline" onclick="fillSample()">
       &#9654; Fill Sample Data
+    </button>
+    <button class="btn-blue-outline" onclick="openHistoryModal()">
+      &#128462; History
     </button>
   </div>
 
@@ -415,7 +450,175 @@ body{
   </div>
 </div>
 
+<!-- History Modal -->
+<div class="modal-overlay" id="modal_history" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modal_history').classList.remove('show')">&#10005;</button>
+    <h2>&#128462; History</h2>
+    <div id="history_list"></div>
+  </div>
+</div>
+
 <script>
+// ── History Management ────────────────────────────────────
+function getHistory() {
+  var stored = localStorage.getItem('rentAgreementHistory');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveHistory() {
+  var history = getHistory();
+
+  var entry = {
+    exec_date: gv('exec_date'),
+    reg_type: gv('reg_type'),
+
+    ll_name: gv('ll_name'),
+    ll_age: gv('ll_age'),
+    ll_occ: gv('ll_occ'),
+    ll_pan: gv('ll_pan'),
+    ll_addr: gv('ll_addr'),
+
+    flat_no: gv('flat_no'),
+    buildup: gv('buildup'),
+    prop_floor: gv('prop_floor'),
+    bldg_name: gv('bldg_name'),
+    survey_no: gv('survey_no'),
+    village: gv('village'),
+    prop_city: gv('prop_city'),
+    taluka: gv('taluka'),
+    dist_pin: gv('dist_pin'),
+    corp: gv('corp'),
+    prop_use: gv('prop_use'),
+
+    start_date: gv('start_date'),
+    duration: gv('duration'),
+    end_date: gv('end_date'),
+    rent: gv('rent'),
+    rent_w: gv('rent_w'),
+    dep: gv('dep'),
+    dep_w: gv('dep_w'),
+    dep_mode: gv('dep_mode'),
+
+    misc: gv('misc'),
+
+    tenant1_name: gv('tn1_name'),
+    tenant1_age: gv('tn1_age'),
+    tenant1_occ: gv('tn1_occ'),
+    tenant1_addr: gv('tn1_addr'),
+
+    timestamp: new Date().toLocaleString()
+  };
+
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+
+  localStorage.setItem('rentAgreementHistory', JSON.stringify(history));
+}
+
+
+function loadFromHistory(index) {
+  var history = getHistory();
+  var entry = history[index];
+  if (!entry) return;
+
+  // Agreement
+  document.getElementById('exec_date').value = entry.exec_date || '';
+  document.getElementById('reg_type').value = entry.reg_type || '';
+
+  // Owner
+  document.getElementById('ll_name').value = entry.ll_name || '';
+  document.getElementById('ll_age').value = entry.ll_age || '';
+  document.getElementById('ll_occ').value = entry.ll_occ || '';
+  document.getElementById('ll_pan').value = entry.ll_pan || '';
+  document.getElementById('ll_addr').value = entry.ll_addr || '';
+
+  // Property
+  document.getElementById('flat_no').value = entry.flat_no || '';
+  document.getElementById('buildup').value = entry.buildup || '';
+  document.getElementById('prop_floor').value = entry.prop_floor || '';
+  document.getElementById('bldg_name').value = entry.bldg_name || '';
+  document.getElementById('survey_no').value = entry.survey_no || '';
+  document.getElementById('village').value = entry.village || '';
+  document.getElementById('prop_city').value = entry.prop_city || '';
+  document.getElementById('taluka').value = entry.taluka || '';
+  document.getElementById('dist_pin').value = entry.dist_pin || '';
+  document.getElementById('corp').value = entry.corp || '';
+  document.getElementById('prop_use').value = entry.prop_use || '';
+
+  // Rent section
+  document.getElementById('start_date').value = entry.start_date || '';
+  document.getElementById('duration').value = entry.duration || '';
+  document.getElementById('end_date').value = entry.end_date || '';
+  document.getElementById('rent').value = entry.rent || '';
+  document.getElementById('rent_w').value = entry.rent_w || '';
+  document.getElementById('dep').value = entry.dep || '';
+  document.getElementById('dep_w').value = entry.dep_w || '';
+  document.getElementById('dep_mode').value = entry.dep_mode || '';
+
+  // Misc
+  document.getElementById('misc').value = entry.misc || '';
+
+  // Tenant
+  document.getElementById('tc').innerHTML = '';
+  tenantCount = 0;
+  addTenant({
+    name: entry.tenant1_name || '',
+    age: entry.tenant1_age || '',
+    occ: entry.tenant1_occ || '',
+    addr: entry.tenant1_addr || ''
+  });
+
+  // Recalculate auto fields
+  calcEnd();
+  aw('rent','rent_w');
+  aw('dep','dep_w');
+
+  syncPhotos();
+
+  document.getElementById('modal_history').classList.remove('show');
+  window.scrollTo(0, 0);
+}
+
+
+function deleteFromHistory(index) {
+  if (!confirm('Delete this history entry?')) return;
+  var history = getHistory();
+  history.splice(index, 1);
+  localStorage.setItem('rentAgreementHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  var history = getHistory();
+  var listEl = document.getElementById('history_list');
+  if (history.length === 0) {
+    listEl.innerHTML = '<div class="history-empty">No history saved yet. Fill out a form and generate a PDF to save history.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  history.forEach(function(entry, idx) {
+    var item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = 
+      '<div class="history-text">' +
+        '<div class="owner">Owner: ' + (entry.ownerName || 'N/A') + '</div>' +
+        '<div class="tenant">Tenant 1: ' + (entry.tenant1Name || 'N/A') + '</div>' +
+        '<div class="timestamp">' + entry.timestamp + '</div>' +
+      '</div>' +
+      '<div class="history-btns">' +
+        '<button class="btn-load" onclick="loadFromHistory(' + idx + ')">Load</button>' +
+        '<button class="btn-delete" onclick="deleteFromHistory(' + idx + ')">Delete</button>' +
+      '</div>';
+    listEl.appendChild(item);
+  });
+}
+
+function openHistoryModal() {
+  renderHistory();
+  document.getElementById('modal_history').classList.add('show');
+}
+
 // ── Number to Words ───────────────────────────────────────
 var WO=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
   'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
@@ -802,6 +1005,13 @@ function genPDF() {
         addr: gv('tn'+ti+'_addr'),
         key:  't'+ti
       });
+    }
+
+    // Save to history BEFORE generating PDF
+    var ownerName = gv('ll_name');
+    var tenant1Name = (tenants.length > 0) ? tenants[0].name : '';
+    if (ownerName || tenant1Name) {
+      saveHistory(ownerName, tenant1Name);
     }
 
     // Data
