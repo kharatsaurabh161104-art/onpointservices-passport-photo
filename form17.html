@@ -790,33 +790,64 @@ const p1tokens = [
   doc.save(`Form17_${cleanName}.pdf`);
 
 }
+// ✅ SCROLL CONTROL FUNCTIONS
+function enableScroll(){
+  document.body.style.overflow = "auto";
+  document.body.style.position = "static";
+  document.body.style.height = "auto";
+  document.body.style.top = "auto";
+
+  document.documentElement.style.overflow = "auto";
+
+  // remove inline styles completely (strong fix)
+  document.body.removeAttribute("style");
+}
+function forceUnlockScroll(){
+  setTimeout(() => {
+    enableScroll();
+  }, 500);
+
+  setTimeout(() => {
+    enableScroll();
+  }, 1500);
+}
 function startPayment(){
 
   const options = {
-    key: "YOUR_RAZORPAY_KEY", // replace with your key
-    amount: 5000, // ₹50 = 5000 paise
+    key: "YOUR_RAZORPAY_KEY",
+    amount: 5000,
     currency: "INR",
     name: "Onpoint Services",
     description: "Form 17 PDF Download",
-    
+
     handler: function (response){
-      // ✅ Payment success → generate PDF
+      enableScroll();
       generatePDF();
     },
 
-    prefill: {
-      name: v('fullName') || "Customer"
-    },
-
-    theme: {
-      color: "#0f2540"
+    modal: {
+      ondismiss: function(){
+        forceUnlockScroll();  // 🔥 MAIN FIX
+        alert("Payment cancelled or failed");
+      }
     }
   };
 
   const rzp = new Razorpay(options);
   rzp.open();
-}
 
+  // lock scroll manually
+  document.body.style.overflow = "hidden";
+}
+// 🔥 Razorpay bug fix (auto unlock on focus)
+window.addEventListener("focus", () => {
+  forceUnlockScroll();
+});
+
+// 🔥 Also unlock on click anywhere
+document.addEventListener("click", () => {
+  enableScroll();
+});
 </script>
 </body>
 </html>
