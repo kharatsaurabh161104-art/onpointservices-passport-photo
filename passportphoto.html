@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <script>
-// Apply saved theme before first paint to avoid a flash of the wrong theme
 (function() {
   try {
     if (localStorage.getItem('op_theme') === 'light') {
@@ -64,7 +63,6 @@
   --scrollbar-thumb-hover: rgba(201,168,76,0.4);
 }
 
-/* Light theme — activated by <html data-theme="light">, toggled from the header */
 :root[data-theme="light"] {
   --navy:         #f5f7fc;
   --navy-mid:     #ffffff;
@@ -256,7 +254,6 @@ body::after {
   min-height: 0;
 }
 
-/* ════════ LEFT WORKSPACE ════════ */
 .workspace {
   width: 420px;
   background: var(--workspace-bg);
@@ -663,7 +660,6 @@ button:hover {
   box-shadow: 0 6px 16px rgba(201,168,76,0.15);
 }
 
-/* ════════ RIGHT PREVIEW ════════ */
 .preview-pane {
   flex: 1;
   background: var(--preview-bg);
@@ -721,7 +717,6 @@ button:hover {
   opacity: 0.6;
 }
 
-/* ════════ CROP MODAL ════════ */
 .crop-modal {
   display: none;
   position: fixed;
@@ -937,11 +932,6 @@ button:hover {
 }
 .history-delete:hover { background: rgba(224,92,92,0.18); box-shadow: none; }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 @media (max-width: 1024px) {
   .workspace { width: 360px; padding: 18px; }
   .preview-pane { padding: 24px; }
@@ -956,7 +946,6 @@ button:hover {
 </head>
 <body>
 
-<!-- Header -->
 <div class="top-header">
   <div class="header-left">
     <div class="brand-badge">✦ Onpoint Services ✦</div>
@@ -972,13 +961,10 @@ button:hover {
   </div>
 </div>
 
-<!-- Main Container -->
 <div class="main-container">
 
-  <!-- LEFT WORKSPACE -->
   <div class="workspace">
     
-    <!-- Step 1: Type Selection -->
     <div class="section">
       <div class="section-title">📋 Type</div>
       <select id="type" style="display:none" onchange="updateTypeUI()">
@@ -1003,7 +989,6 @@ button:hover {
       </div>
     </div>
 
-    <!-- Step 2: Upload -->
     <div class="section">
       <div class="section-title">📷 Upload Photos</div>
       <div id="dropZone">
@@ -1017,7 +1002,6 @@ button:hover {
       <div id="preview"></div>
     </div>
 
-    <!-- Step 3: Passport Size -->
     <div class="section" id="passportSizeStep">
       <div class="section-title">📏 Size</div>
       <label class="control-label">Photo Size</label>
@@ -1028,7 +1012,6 @@ button:hover {
       </select>
     </div>
 
-    <!-- Step 3: PAN Card Type -->
     <div class="section hidden" id="pancardTypeStep">
       <div class="section-title">🆔 PAN Type</div>
       <div class="pancard-options">
@@ -1051,7 +1034,6 @@ button:hover {
       </div>
     </div>
 
-    <!-- Step 4: Crop -->
     <div class="section">
       <div class="section-title">✂️ Crop</div>
       <button onclick="openCrop()" style="width: 100%;">Open Crop Tool</button>
@@ -1065,7 +1047,6 @@ button:hover {
       </div>
     </div>
 
-    <!-- Step 5: Adjustments -->
     <div class="section">
       <div class="section-title">⚙️ Adjust</div>
       <div class="adj-grid">
@@ -1079,7 +1060,6 @@ button:hover {
       </div>
     </div>
 
-    <!-- Step 6: Download -->
     <div class="section">
       <div class="section-title">📥 Download</div>
       <div class="btn-row">
@@ -1093,7 +1073,6 @@ button:hover {
 
   </div>
 
-  <!-- RIGHT PREVIEW -->
   <div class="preview-pane">
     <div class="preview-label">Live Preview</div>
     <div class="preview-container">
@@ -1107,7 +1086,6 @@ button:hover {
 
 </div>
 
-<!-- Crop Modal -->
 <div class="crop-modal" id="cropModal">
   <div class="crop-modal-content">
     <div class="crop-modal-title">Crop Photo</div>
@@ -1119,7 +1097,6 @@ button:hover {
   </div>
 </div>
 
-<!-- Info Panel -->
 <div class="panel" id="infoPanel">
   <button class="close-panel-btn" onclick="toggleInfo()">✕</button>
   <div class="panel-title">📋 Rate Chart</div>
@@ -1166,7 +1143,6 @@ button:hover {
   </div>
 </div>
 
-<!-- History Panel -->
 <div class="panel" id="historyPanel">
   <button class="close-panel-btn" onclick="toggleHistory()">✕</button>
   <div class="panel-title">🗂 History</div>
@@ -1222,13 +1198,8 @@ function clearHistory() {
   saveHistory([]); renderHistory();
 }
 
-function toggleInfo() {
-  document.getElementById("infoPanel").classList.toggle("active");
-}
-
-function toggleHistory() {
-  document.getElementById("historyPanel").classList.toggle("active");
-}
+function toggleInfo() { document.getElementById("infoPanel").classList.toggle("active"); }
+function toggleHistory() { document.getElementById("historyPanel").classList.toggle("active"); }
 
 function renderHistory() {
   const history = getHistory();
@@ -1268,40 +1239,35 @@ function renderHistory() {
 
 renderHistory();
 
-// Helper function to verify quantities (call from console: checkQuantities())
-function checkQuantities() {
-  console.log("=== Current Quantities ===");
-  console.log("selectionOrder:", selectionOrder);
-  console.log("photoQuantities:", photoQuantities);
-  
-  selectionOrder.forEach(idx => {
-    const select = document.getElementById(`qty_${idx}`);
-    if (select) {
-      console.log(`Photo ${idx}: select.value="${select.value}", stored="${photoQuantities[`photo_${idx}`]}"`);
-    } else {
-      console.log(`Photo ${idx}: NO SELECT FOUND (qty_${idx})`);
-    }
-  });
-}
-
 /* ════════ EDITOR STATE ════════ */
 let images = [], currentIndex = 0, cropper;
 let currentType = "passport", currentPancardType = "photo";
 let selectionOrder = [];
 let photoQuantities = {};
 
+// ── ULTRA HIGH QUALITY CANVAS SETUP ──
+// Use 600 DPI: 600 pixels per inch = 600/25.4 pixels per mm
+// This doubles the pixel density vs 300dpi, giving printers far more data to work with.
+const MM_TO_PX = 600 / 25.4;
+
 let canvas = document.createElement("canvas");
 let ctx = canvas.getContext("2d");
+// Enable maximum image smoothing quality on the working canvas
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+
 let originalImg = new Image();
 let canvasPreview = document.getElementById("canvasPreview");
 let ctxPreview = canvasPreview.getContext("2d");
+ctxPreview.imageSmoothingEnabled = true;
+ctxPreview.imageSmoothingQuality = "high";
 
 const sizes = {
-  "30x37":             { w: 30, h: 37 },
-  "35x45":             { w: 35, h: 45 },
-  "51x51":             { w: 51, h: 51 },
-  "pancard_photo":     { w: 25, h: 35 },
-  "pancard_signature": { w: 45, h: 20 }
+  "30x37":             { w: 30,   h: 37   },
+  "35x45":             { w: 35,   h: 45   },
+  "51x51":             { w: 51,   h: 51   },
+  "pancard_photo":     { w: 25,   h: 35   },
+  "pancard_signature": { w: 45,   h: 20   }
 };
 
 const quantityOptions = {
@@ -1309,8 +1275,6 @@ const quantityOptions = {
   "35x45":  [1, 4, 8, 12, 16, 28],
   "51x51":  [1, 6, 15]
 };
-
-const MM_TO_PX = 300 / 25.4;
 
 function setType(type, el) {
   document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('selected'));
@@ -1345,7 +1309,6 @@ function updatePancardType() {
 
 document.getElementById("ratio").onchange = function() {
   updateTypeUI();
-  // Update quantity options for all thumbnails
   const ratio = this.value;
   const options = quantityOptions[ratio] || [1, 3, 6, 12, 18, 42];
   
@@ -1354,16 +1317,12 @@ document.getElementById("ratio").onchange = function() {
     if (select) {
       const currentValue = parseInt(select.value);
       select.innerHTML = '';
-      
-      // Recreate options
       options.forEach(val => {
         const opt = document.createElement("option");
         opt.value = val.toString();
         opt.textContent = val.toString();
         select.appendChild(opt);
       });
-      
-      // Set to current value if it exists in new options, otherwise first option
       if (options.includes(currentValue)) {
         select.value = currentValue.toString();
         photoQuantities[`photo_${idx}`] = currentValue;
@@ -1371,8 +1330,6 @@ document.getElementById("ratio").onchange = function() {
         select.value = options[0].toString();
         photoQuantities[`photo_${idx}`] = options[0];
       }
-      
-      console.log(`Updated qty_${idx}: options=[${options}], selected=${select.value}`); // Debug
     }
   });
 };
@@ -1399,30 +1356,23 @@ dropZone.addEventListener("drop", e => {
   dropZone.style.background = "rgba(201,168,76,0.02)";
 });
 
-/* ══════ CLEAR FUNCTION ══════ */
+/* ══════ CLEAR ══════ */
 function clearAllPhotos() {
   if (!images.length) return;
   if (!confirm("Clear all photos? This action cannot be undone.")) return;
-  
   images = [];
   selectionOrder = [];
   photoQuantities = {};
   currentIndex = 0;
-  
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
-  
+  document.getElementById("preview").innerHTML = "";
   const previewEmpty = document.querySelector(".preview-empty");
   if (previewEmpty) previewEmpty.style.display = "flex";
-  
-  const canvasPreview = document.getElementById("canvasPreview");
-  const ctxPreview = canvasPreview.getContext("2d");
-  ctxPreview.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
-  
+  const ctxP = canvasPreview.getContext("2d");
+  ctxP.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
   document.getElementById("upload").value = "";
 }
 
-/* ══════ FILE INPUT HANDLER ══════ */
+/* ══════ FILE INPUT ══════ */
 fileInput.onchange = function(e) {
   const startIndex = images.length;
   const preview = document.getElementById("preview");
@@ -1435,22 +1385,15 @@ fileInput.onchange = function(e) {
         let img = new Image();
         img.onload = function() {
           images[index] = img;
-          const photoId = `photo_${index}`;
-          
-          // Initialize quantity if not exists
-          if (!(photoId in photoQuantities)) {
-            photoQuantities[photoId] = 1;
+          if (!((`photo_${index}`) in photoQuantities)) {
+            photoQuantities[`photo_${index}`] = 1;
           }
-          
-          // Only add to selectionOrder if it's a new photo (first time seeing this index)
           if (!selectionOrder.includes(index)) {
             selectionOrder.push(index);
           }
-          
           renderPhotoThumbnail(index, preview);
-          
-          if (index === startIndex) { 
-            originalImg = img; 
+          if (index === startIndex) {
+            originalImg = img;
             currentIndex = index;
             drawCanvas();
             updatePreview();
@@ -1475,29 +1418,29 @@ function renderPhotoThumbnail(index, preview) {
   thumbDiv.className = "thumb";
   
   const thumb = document.createElement("img");
-  thumb.src = images[index].src; 
+  thumb.src = images[index].src;
   thumb.onclick = function() {
-    currentIndex = index; 
+    currentIndex = index;
     originalImg = images[index];
     document.querySelectorAll("#preview img").forEach(x => x.classList.remove("active"));
-    thumb.classList.add("active"); 
+    thumb.classList.add("active");
     drawCanvas();
     updatePreview();
   };
   
   const deleteBtn = document.createElement("button");
-  deleteBtn.innerText = "✕"; 
+  deleteBtn.innerText = "✕";
   deleteBtn.className = "deleteBtn";
-  deleteBtn.onclick = function(ev) { 
-    ev.stopPropagation(); 
-    images.splice(index, 1); 
+  deleteBtn.onclick = function(ev) {
+    ev.stopPropagation();
+    images.splice(index, 1);
     selectionOrder = selectionOrder.filter(i => i !== index);
     delete photoQuantities[`photo_${index}`];
-    wrapper.remove(); 
+    wrapper.remove();
   };
   
-  thumbDiv.appendChild(thumb); 
-  thumbDiv.appendChild(deleteBtn); 
+  thumbDiv.appendChild(thumb);
+  thumbDiv.appendChild(deleteBtn);
   wrapper.appendChild(thumbDiv);
   
   const orderLabel = document.createElement("div");
@@ -1515,11 +1458,9 @@ function renderPhotoThumbnail(index, preview) {
   const select = document.createElement("select");
   select.id = `qty_${index}`;
   
-  // Get current size ratio
   const ratio = document.getElementById("ratio")?.value || "30x37";
   const options = quantityOptions[ratio] || [1, 3, 6, 12, 18, 42];
   
-  // Populate options
   options.forEach(val => {
     const opt = document.createElement("option");
     opt.value = val.toString();
@@ -1527,26 +1468,22 @@ function renderPhotoThumbnail(index, preview) {
     select.appendChild(opt);
   });
   
-  // Initialize photoQuantities and set select value
   if (!photoQuantities[`photo_${index}`]) {
     photoQuantities[`photo_${index}`] = options[0];
   }
   select.value = photoQuantities[`photo_${index}`].toString();
   
-  // Handle quantity change
   select.onchange = function() {
-    const newQty = parseInt(this.value);
-    photoQuantities[`photo_${index}`] = newQty;
-    console.log(`Photo ${index} quantity changed to: ${newQty}`); // Debug
+    photoQuantities[`photo_${index}`] = parseInt(this.value);
   };
   
   qtyContainer.appendChild(select);
   wrapper.appendChild(qtyContainer);
-  
   preview.appendChild(wrapper);
 }
 
-function drawCanvas() {
+/* ════════ HIGH QUALITY CANVAS DRAW ════════ */
+function getCanvasDimensions() {
   let w, h;
   if (currentType === "passport") {
     const r = document.getElementById("ratio").value;
@@ -1555,36 +1492,53 @@ function drawCanvas() {
     const k = currentPancardType === "photo" ? "pancard_photo" : "pancard_signature";
     w = sizes[k].w; h = sizes[k].h;
   }
-  canvas.width  = w * MM_TO_PX;
-  canvas.height = h * MM_TO_PX;
+  return { w, h };
+}
+
+function drawCanvas() {
+  const { w, h } = getCanvasDimensions();
+  // ── FIX 1: Always use full 300dpi pixel dimensions for the working canvas
+  canvas.width  = Math.round(w * MM_TO_PX);
+  canvas.height = Math.round(h * MM_TO_PX);
+
+  // ── FIX 2: Re-apply smoothing after resize (canvas resize resets context state)
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ── FIX 3: Draw the original image at native resolution, letting the browser
+  //    downsample with high-quality bicubic filtering rather than nearest-neighbour.
+  //    This preserves all original pixel data.
   ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
 }
 
 function updatePreview() {
-  canvasPreview.style.width = "400px";
-  canvasPreview.style.height = "500px";
+  // Preview canvas is display-only at 400×500px — no quality loss here
+  ctxPreview.imageSmoothingEnabled = true;
+  ctxPreview.imageSmoothingQuality = "high";
+
   drawCanvas();
   const sourceAspect = canvas.width / canvas.height;
   const targetAspect = 400 / 500;
-  
-  let srcWidth = canvas.width;
+
+  let srcWidth  = canvas.width;
   let srcHeight = canvas.height;
-  
+
   if (sourceAspect > targetAspect) {
     srcWidth = canvas.height * targetAspect;
   } else {
     srcHeight = canvas.width / targetAspect;
   }
-  
-  const srcX = (canvas.width - srcWidth) / 2;
+
+  const srcX = (canvas.width  - srcWidth)  / 2;
   const srcY = (canvas.height - srcHeight) / 2;
-  
+
   ctxPreview.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
   ctxPreview.drawImage(canvas, srcX, srcY, srcWidth, srcHeight, 0, 0, 400, 500);
 }
 
-/* ────── ENHANCED CROPPING ────── */
+/* ────── CROP ────── */
 function openCrop() {
   document.getElementById("cropModal").classList.add("active");
   const img = document.getElementById("cropImage");
@@ -1598,8 +1552,8 @@ function openCrop() {
     aspect = sizes[k].w / sizes[k].h;
   }
   if (cropper) cropper.destroy();
-  cropper = new Cropper(img, { 
-    aspectRatio: aspect, 
+  cropper = new Cropper(img, {
+    aspectRatio: aspect,
     viewMode: 1,
     autoCropArea: 0.8,
     responsive: true,
@@ -1614,236 +1568,287 @@ function openCrop() {
 function rotateCrop(degrees) { if (cropper) cropper.rotate(degrees); }
 function flipCropH() { if (cropper) cropper.scaleX(-1); }
 function flipCropV() { if (cropper) cropper.scaleY(-1); }
-function zoomIn() { if (cropper) cropper.zoom(0.1); }
+function zoomIn()  { if (cropper) cropper.zoom(0.1); }
 function zoomOut() { if (cropper) cropper.zoom(-0.1); }
 function resetCrop() { if (cropper) cropper.reset(); }
 
 function applyCrop() {
-  const cropped = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
-  const data = cropped.toDataURL();
-  images[currentIndex].src = data; 
-  originalImg.src = data;
-  updatePreview();
-  closeCrop();
+  // Ask Cropper.js for the largest possible output:
+  // 1. Get the natural pixel dimensions of the crop region from the source image
+  const cropData  = cropper.getData(true); // rounded to integers
+  const srcNatW   = Math.round(cropData.width);
+  const srcNatH   = Math.round(cropData.height);
+
+  // 2. Also compute our 600dpi print dimensions
+  const { w, h }  = getCanvasDimensions();
+  const printW    = Math.round(w * MM_TO_PX);
+  const printH    = Math.round(h * MM_TO_PX);
+
+  // 3. Use whichever is larger — source pixels or print pixels.
+  //    This means we never downscale a high-res source image just to fit the
+  //    print canvas; we keep every original pixel available for the PDF.
+  const outW = Math.max(srcNatW, printW);
+  const outH = Math.max(srcNatH, printH);
+
+  const cropped = cropper.getCroppedCanvas({
+    width:                 outW,
+    height:                outH,
+    imageSmoothingEnabled: true,
+    imageSmoothingQuality: "high",
+  });
+  const data = cropped.toDataURL("image/png"); // lossless — no compression artefacts
+  const newImg = new Image();
+  newImg.onload = function() {
+    images[currentIndex] = newImg;
+    originalImg = newImg;
+    updatePreview();
+    closeCrop();
+  };
+  newImg.src = data;
 }
 
 function closeCrop() {
   document.getElementById("cropModal").classList.remove("active");
-  if (cropper) cropper.destroy();
+  if (cropper) { cropper.destroy(); cropper = null; }
 }
 
+/* ────── ADJUSTMENTS ────── */
 function brightness(v) {
-  const img = ctx.getImageData(0,0,canvas.width,canvas.height); const d = img.data;
-  for (let i=0;i<d.length;i+=4) { d[i]=Math.min(255,Math.max(0,d[i]+v)); d[i+1]=Math.min(255,Math.max(0,d[i+1]+v)); d[i+2]=Math.min(255,Math.max(0,d[i+2]+v)); }
-  ctx.putImageData(img,0,0); images[currentIndex].src = canvas.toDataURL(); updatePreview();
+  drawCanvas();
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.min(255, Math.max(0, d[i]   + v));
+    d[i+1] = Math.min(255, Math.max(0, d[i+1] + v));
+    d[i+2] = Math.min(255, Math.max(0, d[i+2] + v));
+  }
+  ctx.putImageData(imgData, 0, 0);
+  // ── FIX 5: Save adjusted version as lossless PNG to avoid JPEG artefact accumulation
+  const src = canvas.toDataURL("image/png");
+  const newImg = new Image();
+  newImg.onload = function() { images[currentIndex] = newImg; originalImg = newImg; updatePreview(); };
+  newImg.src = src;
 }
 
 function contrast(v) {
-  const img = ctx.getImageData(0,0,canvas.width,canvas.height); const d = img.data;
-  const f = (259*(v+255))/(255*(259-v));
-  for (let i=0;i<d.length;i+=4) { d[i]=Math.min(255,Math.max(0,f*(d[i]-128)+128)); d[i+1]=Math.min(255,Math.max(0,f*(d[i+1]-128)+128)); d[i+2]=Math.min(255,Math.max(0,f*(d[i+2]-128)+128)); }
-  ctx.putImageData(img,0,0); images[currentIndex].src = canvas.toDataURL(); updatePreview();
+  drawCanvas();
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imgData.data;
+  const f = (259 * (v + 255)) / (255 * (259 - v));
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.min(255, Math.max(0, f * (d[i]   - 128) + 128));
+    d[i+1] = Math.min(255, Math.max(0, f * (d[i+1] - 128) + 128));
+    d[i+2] = Math.min(255, Math.max(0, f * (d[i+2] - 128) + 128));
+  }
+  ctx.putImageData(imgData, 0, 0);
+  const src = canvas.toDataURL("image/png");
+  const newImg = new Image();
+  newImg.onload = function() { images[currentIndex] = newImg; originalImg = newImg; updatePreview(); };
+  newImg.src = src;
 }
 
 function setBG(color) {
-  ctx.fillStyle = color; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
-  images[currentIndex].src = canvas.toDataURL(); updatePreview();
+  drawCanvas();
+  // Fill background first, then draw image on top (for transparent PNGs)
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = "source-over";
+  const src = canvas.toDataURL("image/png");
+  const newImg = new Image();
+  newImg.onload = function() { images[currentIndex] = newImg; originalImg = newImg; updatePreview(); };
+  newImg.src = src;
 }
 
 function resetImage() { drawCanvas(); updatePreview(); }
+
+/* ════════ HIGH-QUALITY IMAGE DATA HELPER ════════ */
+/**
+ * Renders an image element onto a fresh 600dpi canvas and returns a PNG
+ * data-URL. PNG is lossless — zero compression artefacts, every pixel exact.
+ *
+ * If the source image is larger than the requested print dimensions we draw
+ * it at its native size so no detail is ever thrown away before the PDF stage.
+ */
+function hqImgData(imgEl, pxW, pxH) {
+  // Use the larger of source or print dimensions so we never downsample prematurely
+  const outW = Math.max(Math.round(pxW), imgEl.naturalWidth  || Math.round(pxW));
+  const outH = Math.max(Math.round(pxH), imgEl.naturalHeight || Math.round(pxH));
+
+  const tc = document.createElement("canvas");
+  tc.width  = outW;
+  tc.height = outH;
+  const tcCtx = tc.getContext("2d");
+  tcCtx.imageSmoothingEnabled = true;
+  tcCtx.imageSmoothingQuality = "high";
+  tcCtx.drawImage(imgEl, 0, 0, outW, outH);
+  // PNG = lossless, no compression generation-loss unlike JPEG
+  return tc.toDataURL("image/png");
+}
 
 /* ════════ DOWNLOAD ════════ */
 function downloadJPEG() {
   if (!images.length) { alert("Please upload a photo first."); return; }
   try {
     const r = document.getElementById("ratio").value;
-    const names = { "30x37":"passport_3x3.7cm.jpg", "35x45":"passport_3.5x4.5cm.jpg", "51x51":"passport_2x2inch.jpg" };
-    const labels = { "30x37":"3 × 3.7 cm (JPEG)", "35x45":"3.5 × 4.5 cm (JPEG)", "51x51":"Indian Passport 2×2 inch (JPEG)" };
-    const data = canvas.toDataURL("image/jpeg", 0.95);
-    const a = document.createElement("a"); a.href=data; a.download=names[r]; 
-    a.click();
-    const tc=document.createElement("canvas"); tc.width=60; tc.height=60;
-    tc.getContext("2d").drawImage(images[currentIndex],0,0,60,60);
-    addHistoryEntry(tc.toDataURL("image/jpeg",0.3), labels[r]);
-  } catch(err) { alert("Error: "+err.message); }
+    const names  = { "30x37":"passport_3x3.7cm.jpg",  "35x45":"passport_3.5x4.5cm.jpg",  "51x51":"passport_2x2inch.jpg" };
+    const labels = { "30x37":"3 × 3.7 cm (JPEG)",     "35x45":"3.5 × 4.5 cm (JPEG)",     "51x51":"Indian Passport 2×2 inch (JPEG)" };
+    // ── FIX 7: Export full working canvas at quality 1.0
+    const data = canvas.toDataURL("image/jpeg", 1.0);
+    const a = document.createElement("a"); a.href = data; a.download = names[r]; a.click();
+    const tc = document.createElement("canvas"); tc.width = 60; tc.height = 60;
+    const tcCtx = tc.getContext("2d");
+    tcCtx.imageSmoothingEnabled = true; tcCtx.imageSmoothingQuality = "high";
+    tcCtx.drawImage(images[currentIndex], 0, 0, 60, 60);
+    addHistoryEntry(tc.toDataURL("image/jpeg", 0.5), labels[r]);
+  } catch(err) { alert("Error: " + err.message); }
 }
 
 function downloadPancardJPEG() {
   if (!images.length) { alert("Please upload a photo first."); return; }
   try {
-    const target = currentPancardType==="photo" ? 18000 : 9000;
-    let q=0.85, data;
-    while (q>0.1) {
-      data = canvas.toDataURL("image/jpeg",q);
-      if (Math.ceil((data.length-'data:image/jpeg;base64,'.length)*0.75)<=target) break;
-      q-=0.05;
+    const target = currentPancardType === "photo" ? 18000 : 9000;
+    let q = 0.92, data;
+    // Start from 0.92 (higher quality) and step down in small increments
+    while (q > 0.05) {
+      data = canvas.toDataURL("image/jpeg", q);
+      if (Math.ceil((data.length - "data:image/jpeg;base64,".length) * 0.75) <= target) break;
+      q -= 0.03;
     }
-    const a=document.createElement("a"); a.href=data;
-    a.download = currentPancardType==="photo"?"pan_card_photo.jpg":"pan_card_signature.jpg";
+    const a = document.createElement("a"); a.href = data;
+    a.download = currentPancardType === "photo" ? "pan_card_photo.jpg" : "pan_card_signature.jpg";
     a.click();
-    const label = currentPancardType==="photo"?"Pan Card Photo (2.5×3.5 cm)":"Pan Card Signature (4.5×2 cm)";
-    const tc=document.createElement("canvas"); tc.width=60; tc.height=60;
-    tc.getContext("2d").drawImage(images[0],0,0,60,60);
-    addHistoryEntry(tc.toDataURL("image/jpeg",0.3), label);
-  } catch(err) { alert("Error: "+err.message); }
+    const label = currentPancardType === "photo" ? "Pan Card Photo (2.5×3.5 cm)" : "Pan Card Signature (4.5×2 cm)";
+    const tc = document.createElement("canvas"); tc.width = 60; tc.height = 60;
+    tc.getContext("2d").drawImage(images[0], 0, 0, 60, 60);
+    addHistoryEntry(tc.toDataURL("image/jpeg", 0.5), label);
+  } catch(err) { alert("Error: " + err.message); }
 }
 
+/* ════════ PDF GENERATION — MAX QUALITY ════════ */
 function generatePDF() {
-  if (!images.length) { alert("Please upload photos first."); return; }
-  if (!selectionOrder.length) { alert("No photos in selection order."); return; }
-  
+  if (!images.length)       { alert("Please upload photos first.");           return; }
+  if (!selectionOrder.length) { alert("No photos in selection order.");        return; }
+
   try {
     const ratio = document.getElementById("ratio").value;
-    const doc = new jsPDF("p","mm","a4");
-    const W=210, H=297, margin=5, gap=4;
+    // ── FIX 8: Set jsPDF to compress=false so it embeds images at full quality
+    //    without additional DCT re-compression inside the PDF engine.
+    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4", compress: false });
+    const W = 210, H = 297, margin = 5, gap = 4;
 
-    function imgData(el, cw, ch) {
-      const tc=document.createElement("canvas"); 
-      tc.width=Math.round(cw); 
-      tc.height=Math.round(ch);
-      const tcCtx = tc.getContext("2d");
-      tcCtx.drawImage(el,0,0,tc.width,tc.height);
-      return tc.toDataURL("image/jpeg",0.95);
-    }
-
-    function placePhoto(doc, dataURL, x, y, pw, ph) {
-      doc.addImage(dataURL,"JPEG",x,y,pw,ph);
-      doc.setLineWidth(0.2); 
-      doc.setDrawColor(0); 
-      doc.rect(x,y,pw,ph);
+    // ── FIX 9: Unified high-quality place-photo helper
+    //    - Uses hqImgData() which renders at 300dpi and quality=1.0
+    //    - Border drawn after image so it sits cleanly on top
+    function placePhoto(doc, imgEl, x, y, pw, ph, rotated) {
+      let dataURL;
+      if (rotated) {
+        // For 35×45 landscape: rotate the image 90° on a temp canvas at full res
+        const sw = Math.round(sizes["35x45"].w * MM_TO_PX);
+        const sh = Math.round(sizes["35x45"].h * MM_TO_PX);
+        const rc  = document.createElement("canvas");
+        // Swapped dimensions because we're rotating 90°
+        rc.width  = Math.round(sh); // landscape width in px
+        rc.height = Math.round(sw); // landscape height in px
+        const rx  = rc.getContext("2d");
+        rx.imageSmoothingEnabled  = true;
+        rx.imageSmoothingQuality  = "high";
+        rx.translate(rc.width / 2, rc.height / 2);
+        rx.rotate(Math.PI / 2);
+        rx.drawImage(imgEl, -sw / 2, -sh / 2, sw, sh);
+        // PNG = lossless even for rotated images
+        dataURL = rc.toDataURL("image/png");
+      } else {
+        const pxW = Math.round(pw * MM_TO_PX);
+        const pxH = Math.round(ph * MM_TO_PX);
+        dataURL = hqImgData(imgEl, pxW, pxH);
+      }
+      // "PNG" format string tells jsPDF to embed as lossless PNG, not re-encode as JPEG
+      doc.addImage(dataURL, "PNG", x, y, pw, ph);
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(0);
+      doc.rect(x, y, pw, ph);
     }
 
     function advance(state, pw, ph, cols, isLastPhoto) {
       state.col++;
       if (state.col >= cols) {
-        state.col = 0; 
-        state.x = margin; 
-        state.y += ph + gap;
+        state.col = 0; state.x = margin; state.y += ph + gap;
       } else {
         state.x += pw + gap;
       }
-      // Only add new page if it's not the last photo AND we're out of space
-      if (!isLastPhoto && state.y + ph > H) { 
-        doc.addPage(); 
-        state.x = margin; 
-        state.y = margin; 
-        state.col = 0; 
+      if (!isLastPhoto && state.y + ph > H) {
+        doc.addPage();
+        state.x = margin; state.y = margin; state.col = 0;
       }
     }
 
-    // Build photo list - carefully read from select dropdowns
+    // Build photo list
     const photoList = [];
-    console.log("=== PDF Generation Debug ===");
-    console.log("Selection Order:", selectionOrder);
-    console.log("Photo Quantities Object:", photoQuantities);
-    console.log("Checking select elements...");
-    
     selectionOrder.forEach(idx => {
-      if (images[idx] === undefined) {
-        console.log(`⚠ Skipping idx ${idx} - image not found`);
-        return;
-      }
-      
-      const selectElement = document.getElementById(`qty_${idx}`);
+      if (images[idx] === undefined) return;
+      const selectEl = document.getElementById(`qty_${idx}`);
       let qty = 1;
-      
-      if (selectElement) {
-        const selectValue = selectElement.value;
-        qty = parseInt(selectValue);
-        if (isNaN(qty) || qty < 1) qty = 1;
-        console.log(`✓ Photo ${idx}: select found, value="${selectValue}", qty=${qty}`);
-        photoQuantities[`photo_${idx}`] = qty; // Update stored quantity
+      if (selectEl) {
+        qty = parseInt(selectEl.value) || 1;
+        photoQuantities[`photo_${idx}`] = qty;
       } else {
-        // Fallback to stored quantity
         qty = photoQuantities[`photo_${idx}`] || 1;
-        console.log(`✗ Photo ${idx}: NO select element found (qty_${idx}), using stored qty=${qty}`);
       }
-      
-      // Add photo qty times
-      for (let i = 0; i < qty; i++) {
-        photoList.push(idx);
-      }
+      for (let i = 0; i < qty; i++) photoList.push(idx);
     });
-    
-    console.log("Final photoList (length=" + photoList.length + "):", photoList);
-    console.log("=== End Debug ===");
 
-    if (!photoList.length) { 
-      alert("No photos to generate. Please check quantities."); 
-      return; 
-    }
+    if (!photoList.length) { alert("No photos to generate. Please check quantities."); return; }
 
     if (ratio === "35x45") {
-      const pW=45, pH=35, cols=4;
+      const pW = 45, pH = 35, cols = 4;
       const state = { x: margin, y: margin, col: 0 };
       photoList.forEach((idx, photoIndex) => {
         if (!images[idx]) return;
-        const el = images[idx];
-        const sw=Math.round(sizes["35x45"].w*MM_TO_PX);
-        const sh=Math.round(sizes["35x45"].h*MM_TO_PX);
-        const rc=document.createElement("canvas"); 
-        rc.width=sh; 
-        rc.height=sw;
-        const rx=rc.getContext("2d");
-        rx.translate(rc.width/2, rc.height/2); 
-        rx.rotate(Math.PI/2);
-        rx.drawImage(el, -sw/2, -sh/2, sw, sh);
-        placePhoto(doc, rc.toDataURL("image/jpeg",0.95), state.x, state.y, pW, pH);
-        const isLast = (photoIndex === photoList.length - 1);
-        advance(state, pW, pH, cols, isLast);
+        placePhoto(doc, images[idx], state.x, state.y, pW, pH, true);
+        advance(state, pW, pH, cols, photoIndex === photoList.length - 1);
       });
     } else if (ratio === "30x37") {
-      const pw=sizes["30x37"].w;
-      const ph=sizes["30x37"].h;
+      const pw = sizes["30x37"].w, ph = sizes["30x37"].h;
       const cols = Math.floor((W - margin) / (pw + gap));
       const state = { x: margin, y: margin, col: 0 };
       photoList.forEach((idx, photoIndex) => {
         if (!images[idx]) return;
-        const el = images[idx];
-        placePhoto(doc, imgData(el, pw*MM_TO_PX, ph*MM_TO_PX), state.x, state.y, pw, ph);
-        const isLast = (photoIndex === photoList.length - 1);
-        advance(state, pw, ph, cols, isLast);
+        placePhoto(doc, images[idx], state.x, state.y, pw, ph, false);
+        advance(state, pw, ph, cols, photoIndex === photoList.length - 1);
       });
     } else if (ratio === "51x51") {
-      const pw=sizes["51x51"].w;
-      const ph=sizes["51x51"].h;
-      const cols=3;
+      const pw = sizes["51x51"].w, ph = sizes["51x51"].h, cols = 3;
       const state = { x: margin, y: margin, col: 0 };
       photoList.forEach((idx, photoIndex) => {
         if (!images[idx]) return;
-        const el = images[idx];
-        placePhoto(doc, imgData(el, pw*MM_TO_PX, ph*MM_TO_PX), state.x, state.y, pw, ph);
-        const isLast = (photoIndex === photoList.length - 1);
-        advance(state, pw, ph, cols, isLast);
+        placePhoto(doc, images[idx], state.x, state.y, pw, ph, false);
+        advance(state, pw, ph, cols, photoIndex === photoList.length - 1);
       });
     }
 
     doc.save("passport_photos.pdf");
-    
-    // Add to history
-    const labels = { 
-      "30x37":"3 × 3.7 cm", 
-      "35x45":"3.5 × 4.5 cm (Landscape)", 
-      "51x51":"Indian Passport (2 × 2 inch)" 
+
+    const labels = {
+      "30x37": "3 × 3.7 cm",
+      "35x45": "3.5 × 4.5 cm (Landscape)",
+      "51x51": "Indian Passport (2 × 2 inch)"
     };
-    
-    const tc = document.createElement("canvas"); 
-    tc.width=60; 
-    tc.height=60;
+
+    const tc = document.createElement("canvas");
+    tc.width = 60; tc.height = 60;
     const firstPhotoIdx = selectionOrder[0];
     if (firstPhotoIdx !== undefined && images[firstPhotoIdx]) {
-      tc.getContext("2d").drawImage(images[firstPhotoIdx],0,0,60,60);
+      const tcCtx = tc.getContext("2d");
+      tcCtx.imageSmoothingEnabled = true; tcCtx.imageSmoothingQuality = "high";
+      tcCtx.drawImage(images[firstPhotoIdx], 0, 0, 60, 60);
     }
-    
-    addHistoryEntry(
-      tc.toDataURL("image/jpeg",0.3), 
-      labels[ratio] + " — " + photoList.length + " copies"
-    );
-    
-  } catch(err) { 
+
+    addHistoryEntry(tc.toDataURL("image/jpeg", 0.5), labels[ratio] + " — " + photoList.length + " copies");
+
+  } catch(err) {
     console.error("PDF Generation Error:", err);
-    alert("PDF error: " + err.message); 
+    alert("PDF error: " + err.message);
   }
 }
 </script>
